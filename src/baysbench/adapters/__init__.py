@@ -22,6 +22,20 @@ Available adapters
     — Anthropic Messages API (Claude models).
     Requires: ``pip install baysbench[anthropic]``
 
+:mod:`~baysbench.adapters.inspect_ai`
+    ``from_inspect_dataset``, ``inspect_model``, ``inspect_model_async``,
+    ``exact_match_score``, ``includes_score``, ``pattern_score``,
+    ``choice_score``, ``any_target_score``
+    — AISI Inspect framework: dataset conversion + model/scorer wrappers.
+    Requires: ``pip install baysbench[inspect]``
+
+:mod:`~baysbench.adapters.mteb`
+    ``mteb_sts_dataset``, ``mteb_classification_dataset``, ``st_model``,
+    ``mteb_classification_model``, ``sts_score_fn``,
+    ``make_classification_score_fn``, ``mteb_task_info``
+    — MTEB benchmark: STS + classification datasets and embedding model adapters.
+    Requires: ``pip install baysbench[mteb]``
+
 Quick example::
 
     from baysbench.adapters.openai_compat import openai_model
