@@ -2,11 +2,21 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Type
 
 from .posteriors.base import Posterior
 from .posteriors.beta import BetaPosterior
+
+try:
+    from tqdm import tqdm as _tqdm
+
+    _HAS_TQDM = True
+except ImportError:
+    _HAS_TQDM = False
+
+_log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -46,6 +56,35 @@ class TaskResult:
             return 0.0
         return 1.0 - self.problems_tested / self.total_problems
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a plain dict (JSON-safe, no posterior objects).
+
+        Returns a dict with task metadata, posterior means, credible intervals,
+        and efficiency statistics — suitable for JSON export or DataFrame rows.
+
+        Example::
+
+            import json
+            print(json.dumps(result.to_dict(), indent=2))
+        """
+        lo_a, hi_a = self.posterior_a.credible_interval()
+        lo_b, hi_b = self.posterior_b.credible_interval()
+        return {
+            "name": self.name,
+            "problems_tested": self.problems_tested,
+            "total_problems": self.total_problems,
+            "efficiency": self.efficiency,
+            "p_a_beats_b": self.p_a_beats_b,
+            "winner": self.winner,
+            "skipped": self.skipped,
+            "mean_a": self.posterior_a.mean,
+            "mean_b": self.posterior_b.mean,
+            "ci_a_lo": lo_a,
+            "ci_a_hi": hi_a,
+            "ci_b_lo": lo_b,
+            "ci_b_hi": hi_b,
+        }
+
     def __str__(self) -> str:
         status = "SKIPPED" if self.skipped else (self.winner or "INCONCLUSIVE")
         return (
@@ -81,6 +120,46 @@ class BenchmarkReport:
     def winners(self) -> dict[str, str | None]:
         """Map of task name → winner ('model_a', 'model_b', or None)."""
         return {r.name: r.winner for r in self.task_results}
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the full report to a nested plain dict.
+
+        Example::
+
+            import json
+            with open("report.json", "w") as f:
+                json.dump(bench.run().to_dict(), f, indent=2)
+        """
+        return {
+            "tasks": [r.to_dict() for r in self.task_results],
+            "total_problems_tested": self.total_problems_tested,
+            "total_problems_available": self.total_problems_available,
+            "overall_efficiency": self.overall_efficiency,
+            "winners": self.winners,
+        }
+
+    def to_dataframe(self) -> Any:
+        """Return a :class:`pandas.DataFrame` with one row per task.
+
+        Requires ``pandas`` to be installed (``pip install pandas``).
+
+        Columns: ``name``, ``problems_tested``, ``total_problems``,
+        ``efficiency``, ``p_a_beats_b``, ``winner``, ``skipped``,
+        ``mean_a``, ``mean_b``, ``ci_a_lo``, ``ci_a_hi``,
+        ``ci_b_lo``, ``ci_b_hi``.
+
+        Example::
+
+            df = bench.run().to_dataframe()
+            print(df[["name", "winner", "efficiency"]].to_string())
+        """
+        try:
+            import pandas as pd
+        except ImportError as exc:
+            raise ImportError(
+                "pandas is required for to_dataframe(). Install with: pip install pandas"
+            ) from exc
+        return pd.DataFrame([r.to_dict() for r in self.task_results])
 
     def summary(self) -> str:
         lines = ["=== Bayesian Benchmark Report ==="]
@@ -237,6 +316,7 @@ class BayesianBenchmark:
         dataset: Iterable[Any],
         name: str = "task",
         posterior_factory: Callable[[], Posterior] | None = None,
+        verbose: bool = False,
     ) -> TaskResult:
         """Directly compare two models on a dataset using a scoring function.
 
@@ -249,6 +329,7 @@ class BayesianBenchmark:
             dataset: Iterable of problems.
             name: Task name.
             posterior_factory: Override the benchmark-level posterior.
+            verbose: Show a tqdm progress bar (requires ``tqdm``).
 
         Returns:
             :class:`TaskResult`
@@ -272,7 +353,12 @@ class BayesianBenchmark:
         post_a = factory()
         post_b = factory()
 
-        for i, problem in enumerate(problems):
+        iterator: Iterable[Any] = enumerate(problems)
+        if verbose and _HAS_TQDM:
+            iterator = enumerate(_tqdm(problems, desc=name, unit="problem"))
+
+        _log.debug("compare: task=%s  n=%d", name, len(problems))
+        for i, problem in iterator:
             post_a.observe_one(score_fn(problem, model_a(problem)))
             post_b.observe_one(score_fn(problem, model_b(problem)))
             tested = i + 1
@@ -282,13 +368,34 @@ class BayesianBenchmark:
 
             if self._is_non_discriminating(post_a, post_b):
                 p = post_a.prob_beats(post_b)
+                _log.info(
+                    "compare: task=%s SKIPPED at %d/%d  P(A>B)=%.3f",
+                    name,
+                    tested,
+                    len(problems),
+                    p,
+                )
                 return TaskResult(name, tested, len(problems), post_a, post_b, p, skipped=True)
 
             stop, p = self._stopping(post_a, post_b)
             if stop:
+                _log.info(
+                    "compare: task=%s STOPPED at %d/%d  P(A>B)=%.3f  winner=%s",
+                    name,
+                    tested,
+                    len(problems),
+                    p,
+                    "model_a" if p >= self.confidence else "model_b",
+                )
                 return TaskResult(name, tested, len(problems), post_a, post_b, p)
 
         p = post_a.prob_beats(post_b)
+        _log.info(
+            "compare: task=%s EXHAUSTED %d problems  P(A>B)=%.3f",
+            name,
+            len(problems),
+            p,
+        )
         return TaskResult(name, len(problems), len(problems), post_a, post_b, p)
 
     async def compare_async(
@@ -316,6 +423,7 @@ class BayesianBenchmark:
         post_a = factory()
         post_b = factory()
 
+        _log.debug("compare_async: task=%s  n=%d", name, len(problems))
         for i, problem in enumerate(problems):
             output_a, output_b = await asyncio.gather(
                 call(model_a, problem),
@@ -343,25 +451,57 @@ class BayesianBenchmark:
     # Run all registered tasks
     # ------------------------------------------------------------------
 
-    def run(self) -> BenchmarkReport:
-        """Run all tasks registered via :meth:`task` and return a report."""
+    def run(self, verbose: bool = False) -> BenchmarkReport:
+        """Run all tasks registered via :meth:`task` and return a report.
+
+        Args:
+            verbose: Show tqdm progress bars at the task and problem level.
+                     Requires ``tqdm`` (``pip install tqdm``).
+        """
         report = BenchmarkReport()
-        for task_def in self._tasks:
-            report.task_results.append(self._run_task(task_def))
+        tasks = self._tasks
+        task_iter: Iterable[dict[str, Any]] = tasks
+        if verbose and _HAS_TQDM:
+            task_iter = _tqdm(tasks, desc="Benchmark", unit="task")
+        _log.info("run: starting benchmark  tasks=%d", len(tasks))
+        for task_def in task_iter:
+            result = self._run_task(task_def, verbose=verbose)
+            _log.info(
+                "run: task=%s  winner=%s  P(A>B)=%.3f  tested=%d/%d",
+                result.name,
+                result.winner or "INCONCLUSIVE",
+                result.p_a_beats_b,
+                result.problems_tested,
+                result.total_problems,
+            )
+            report.task_results.append(result)
+        _log.info(
+            "run: done  overall_efficiency=%.1f%%",
+            report.overall_efficiency * 100,
+        )
         return report
 
-    async def run_async(self) -> BenchmarkReport:
-        """Async version of :meth:`run`."""
+    async def run_async(self, verbose: bool = False) -> BenchmarkReport:
+        """Async version of :meth:`run`.
+
+        Args:
+            verbose: Ignored in async mode (tqdm is not async-safe here).
+        """
         report = BenchmarkReport()
+        _log.info("run_async: starting benchmark  tasks=%d", len(self._tasks))
         results = await asyncio.gather(*[self._run_task_async(t) for t in self._tasks])
         report.task_results.extend(results)
+        _log.info(
+            "run_async: done  overall_efficiency=%.1f%%",
+            report.overall_efficiency * 100,
+        )
         return report
 
     # ------------------------------------------------------------------
     # Internal task runners
     # ------------------------------------------------------------------
 
-    def _run_task(self, task_def: dict[str, Any]) -> TaskResult:
+    def _run_task(self, task_def: dict[str, Any], verbose: bool = False) -> TaskResult:
         fn = task_def["fn"]
         name = task_def["name"]
         dataset = task_def.get("dataset") or getattr(fn, "dataset", None)
@@ -372,7 +512,11 @@ class BayesianBenchmark:
         post_a = factory()
         post_b = factory()
 
-        for i, problem in enumerate(problems):
+        problem_iter: Iterable[Any] = enumerate(problems)
+        if verbose and _HAS_TQDM:
+            problem_iter = enumerate(_tqdm(problems, desc=name, unit="problem", leave=False))
+
+        for i, problem in problem_iter:
             val_a, val_b = fn(problem)
             post_a.observe_one(val_a)
             post_b.observe_one(val_b)

@@ -36,11 +36,21 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Type
 
 from .posteriors.base import Posterior
 from .posteriors.beta import BetaPosterior
+
+try:
+    from tqdm import tqdm as _tqdm
+
+    _HAS_TQDM = True
+except ImportError:
+    _HAS_TQDM = False
+
+_log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -65,9 +75,30 @@ class ModelRanking:
     def credible_interval(self) -> tuple[float, float]:
         return self.posterior.credible_interval()
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a plain dict (no posterior object).
+
+        Returns rank, name, posterior mean, 95% credible interval, and
+        the probability of beating the next-ranked model.
+        """
+        lo, hi = self.credible_interval
+        return {
+            "rank": self.rank,
+            "name": self.name,
+            "mean": self.mean,
+            "ci_lo": lo,
+            "ci_hi": hi,
+            "p_beats_next": self.p_beats_next,
+            "next_model": self._next_name if self.p_beats_next is not None else None,
+        }
+
     def __str__(self) -> str:
         lo, hi = self.credible_interval
-        p_str = f"  P(>{self._next_name})={self.p_beats_next:.3f}" if self.p_beats_next is not None else ""
+        p_str = (
+            f"  P(>{self._next_name})={self.p_beats_next:.3f}"
+            if self.p_beats_next is not None
+            else ""
+        )
         return (
             f"#{self.rank} {self.name:20s}  "
             f"score={self.mean:.3f}  "
@@ -97,6 +128,43 @@ class RankingResult:
     def best(self) -> ModelRanking:
         """The top-ranked model."""
         return self.rankings[0]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the ranking result to a plain dict.
+
+        Example::
+
+            import json
+            print(json.dumps(result.to_dict(), indent=2))
+        """
+        return {
+            "rankings": [r.to_dict() for r in self.rankings],
+            "problems_tested": self.problems_tested,
+            "total_problems": self.total_problems,
+            "efficiency": self.efficiency,
+            "converged": self.converged,
+        }
+
+    def to_dataframe(self) -> Any:
+        """Return a :class:`pandas.DataFrame` with one row per model.
+
+        Requires ``pandas`` (``pip install pandas``).
+
+        Columns: ``rank``, ``name``, ``mean``, ``ci_lo``, ``ci_hi``,
+        ``p_beats_next``, ``next_model``.
+
+        Example::
+
+            df = ranker.rank(dataset=problems, score_fn=score).to_dataframe()
+            print(df.to_string())
+        """
+        try:
+            import pandas as pd
+        except ImportError as exc:
+            raise ImportError(
+                "pandas is required for to_dataframe(). Install with: pip install pandas"
+            ) from exc
+        return pd.DataFrame([r.to_dict() for r in self.rankings])
 
     def summary(self) -> str:
         lines = ["=== Bayesian Ranking Result ==="]
@@ -212,6 +280,7 @@ class BayesianRanker:
         self,
         dataset: Iterable[Any],
         score_fn: Callable[[Any, Any], Any] | None = None,
+        verbose: bool = False,
     ) -> RankingResult:
         """Run all registered models on ``dataset`` and return a ranking.
 
@@ -219,6 +288,7 @@ class BayesianRanker:
             dataset: Iterable of problems.
             score_fn: ``score_fn(problem, response) -> value``.
                       If omitted, uses the function set via ``@ranker.evaluate``.
+            verbose: Show a tqdm progress bar (requires ``tqdm``).
 
         Returns:
             :class:`RankingResult` with ordered models, posteriors, and
@@ -234,8 +304,15 @@ class BayesianRanker:
 
         problems = list(dataset)
         posteriors = {name: self._posterior_factory() for name, _ in self._models}
+        model_names = [name for name, _ in self._models]
 
-        for i, problem in enumerate(problems):
+        _log.info("rank: starting  models=%s  n=%d", model_names, len(problems))
+
+        problem_iter: Iterable[Any] = enumerate(problems)
+        if verbose and _HAS_TQDM:
+            problem_iter = enumerate(_tqdm(problems, desc="Ranking", unit="problem"))
+
+        for i, problem in problem_iter:
             for name, model_fn in self._models:
                 response = model_fn(problem)
                 posteriors[name].observe_one(fn(problem, response))
@@ -246,9 +323,20 @@ class BayesianRanker:
 
             if self._ranking_converged(posteriors):
                 ordered = self._build_rankings(posteriors)
+                _log.info(
+                    "rank: CONVERGED at %d/%d  best=%s",
+                    tested,
+                    len(problems),
+                    ordered[0].name,
+                )
                 return RankingResult(ordered, tested, len(problems), converged=True)
 
         ordered = self._build_rankings(posteriors)
+        _log.info(
+            "rank: EXHAUSTED %d problems  best=%s",
+            len(problems),
+            ordered[0].name if ordered else "N/A",
+        )
         return RankingResult(ordered, len(problems), len(problems), converged=False)
 
     async def rank_async(
@@ -275,6 +363,8 @@ class BayesianRanker:
         problems = list(dataset)
         posteriors = {name: self._posterior_factory() for name, _ in self._models}
 
+        _log.info("rank_async: starting  models=%d  n=%d", len(self._models), len(problems))
+
         for i, problem in enumerate(problems):
             responses = await asyncio.gather(
                 *[call(model_fn, problem) for _, model_fn in self._models]
@@ -288,9 +378,11 @@ class BayesianRanker:
 
             if self._ranking_converged(posteriors):
                 ordered = self._build_rankings(posteriors)
+                _log.info("rank_async: CONVERGED at %d/%d", tested, len(problems))
                 return RankingResult(ordered, tested, len(problems), converged=True)
 
         ordered = self._build_rankings(posteriors)
+        _log.info("rank_async: EXHAUSTED %d problems", len(problems))
         return RankingResult(ordered, len(problems), len(problems), converged=False)
 
     # ------------------------------------------------------------------
