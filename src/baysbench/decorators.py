@@ -1,64 +1,78 @@
 """Standalone decorator API for Bayesian benchmarking.
 
 Provides framework-agnostic decorators that work with any callable —
-plain functions, class methods, async functions, or agent wrappers.
+plain functions, async functions, HuggingFace adapters, or agent wrappers.
 
-Typical usage::
+All three styles accept a ``posterior_factory`` argument to swap in a
+different Bayesian model (e.g. :class:`~baysbench.posteriors.NormalPosterior`
+for continuous scores).
 
-    from baysbench import benchmark, BayesianBenchmark
+Styles
+------
 
-    # ── Approach 1: standalone @benchmark decorator ──────────────────────
+**@benchmark** — one-shot comparison with a score function::
+
+    from baysbench import benchmark
+    from baysbench.posteriors import NormalPosterior
+
     @benchmark(
         model_a=gpt4_fn,
         model_b=gpt35_fn,
         dataset=problems,
         confidence=0.95,
     )
-    def gsm8k(problem, response):
+    def exact_match(problem, response):
         return response.strip() == problem["answer"]
 
-    result = gsm8k.run()          # TaskResult
-    print(result)
+    result = exact_match.run()      # TaskResult
+    print(result.winner)
 
-    # ── Approach 2: BayesianBenchmark instance + @bench.task ─────────────
+    # Continuous scores
+    @benchmark(
+        model_a=gpt4_fn,
+        model_b=gpt35_fn,
+        dataset=problems,
+        posterior_factory=NormalPosterior,
+    )
+    def bleu(problem, response):
+        return compute_bleu(response, problem["reference"])   # float
+
+    result = bleu.run()
+
+**BayesianBenchmark + @bench.task** — multi-task suite::
+
     bench = BayesianBenchmark(confidence=0.95)
 
     @bench.task(dataset=problems, name="math")
     def math_task(problem):
-        a_correct = gpt4_fn(problem["question"]) == problem["answer"]
-        b_correct = gpt35_fn(problem["question"]) == problem["answer"]
-        return a_correct, b_correct
+        return (
+            model_a(problem["q"]) == problem["a"],
+            model_b(problem["q"]) == problem["a"],
+        )
 
-    report = bench.run()          # BenchmarkReport
-    print(report.summary())
+    report = bench.run()
 
-    # ── Approach 3: class-based suite with @suite ─────────────────────────
+**@suite** — class-based multi-task suite::
+
     @suite(confidence=0.95)
     class MathBenchmark:
         dataset = problems
 
         @staticmethod
         def task_arithmetic(problem):
-            return (
-                gpt4_fn(problem["q"]) == problem["a"],
-                gpt35_fn(problem["q"]) == problem["a"],
-            )
-
-        @staticmethod
-        def task_algebra(problem):
-            return (
-                gpt4_fn(problem["q"]) == problem["a"],
-                gpt35_fn(problem["q"]) == problem["a"],
-            )
+            return model_a(problem["q"]) == problem["a"], \\
+                   model_b(problem["q"]) == problem["a"]
 
     report = MathBenchmark.run()
 """
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Type
 
 from .benchmark import BayesianBenchmark, BenchmarkReport, TaskResult
+from .posteriors.base import Posterior
+from .posteriors.beta import BetaPosterior
 
 
 def benchmark(
@@ -69,48 +83,62 @@ def benchmark(
     confidence: float = 0.95,
     skip_threshold: float = 0.85,
     min_samples: int = 3,
+    posterior_factory: Callable[[], Posterior] | Type[Posterior] | None = None,
 ) -> Callable:
     """Decorate a scoring function to create a runnable benchmark task.
 
-    The decorated function acts as a normal scoring function but gains a
-    ``.run()`` method that executes the full sequential benchmark and returns
-    a :class:`~baysbench.benchmark.TaskResult`.
+    The decorated function keeps its original behaviour and gains a
+    ``.run()`` method that executes the sequential benchmark.
 
     Args:
-        model_a: Callable ``model_a(problem) -> response`` for model A.
-        model_b: Callable ``model_b(problem) -> response`` for model B.
-        dataset: Iterable of problems fed to both models.
-        name: Optional task name (defaults to the function name).
-        confidence: Stopping threshold — declare winner when P(A>B) ≥ this.
-        skip_threshold: Skip a non-discriminating task when P(A>B) is inside
-                        ``(1-skip_threshold, skip_threshold)``.
-        min_samples: Minimum evaluations before early stopping is considered.
+        model_a: ``model_a(problem) -> response``
+        model_b: ``model_b(problem) -> response``
+        dataset: Iterable of problems.
+        name: Task name (defaults to function name).
+        confidence: Stopping threshold.
+        skip_threshold: Non-discriminating skip threshold.
+        min_samples: Minimum evaluations before early stopping.
+        posterior_factory: Override the Bayesian model.
+                           :class:`~baysbench.posteriors.BetaPosterior` (default)
+                           for binary outcomes; pass
+                           :class:`~baysbench.posteriors.NormalPosterior` for
+                           continuous scores.
 
     Returns:
-        The original scoring function, augmented with a ``.run()`` method.
+        The original function augmented with a ``.run() -> TaskResult`` method
+        and a ``.run_async() -> TaskResult`` coroutine method.
 
-    Example::
+    Examples::
 
-        @benchmark(
-            model_a=lambda p: big_model(p["question"]),
-            model_b=lambda p: small_model(p["question"]),
-            dataset=gsm8k_problems,
-            confidence=0.95,
-        )
+        # Binary exact-match
+        @benchmark(model_a=gpt4, model_b=gpt35, dataset=problems)
         def exact_match(problem, response):
             return response.strip() == problem["answer"]
 
         result = exact_match.run()
-        print(result.winner)        # "model_a", "model_b", or None
-        print(result.efficiency)    # fraction of problems saved
+
+        # Continuous BLEU score
+        from baysbench.posteriors import NormalPosterior
+
+        @benchmark(
+            model_a=gpt4,
+            model_b=gpt35,
+            dataset=problems,
+            posterior_factory=NormalPosterior,
+        )
+        def bleu_score(problem, response):
+            return compute_bleu(response, problem["reference"])
+
+        result = bleu_score.run()
     """
 
-    def decorator(score_fn: Callable[[Any, Any], bool]) -> Callable:
+    def decorator(score_fn: Callable) -> Callable:
         task_name = name or score_fn.__name__
         bench = BayesianBenchmark(
             confidence=confidence,
             skip_threshold=skip_threshold,
             min_samples=min_samples,
+            posterior_factory=posterior_factory,
         )
 
         @functools.wraps(score_fn)
@@ -126,11 +154,22 @@ def benchmark(
                 name=task_name,
             )
 
+        async def run_async() -> TaskResult:
+            return await bench.compare_async(
+                model_a=model_a,
+                model_b=model_b,
+                score_fn=score_fn,
+                dataset=dataset,
+                name=task_name,
+            )
+
         wrapper.run = run  # type: ignore[attr-defined]
+        wrapper.run_async = run_async  # type: ignore[attr-defined]
         wrapper._baysbench_config = {  # type: ignore[attr-defined]
             "confidence": confidence,
             "skip_threshold": skip_threshold,
             "min_samples": min_samples,
+            "posterior_factory": posterior_factory or BetaPosterior,
         }
         return wrapper
 
@@ -141,38 +180,41 @@ def suite(
     confidence: float = 0.95,
     skip_threshold: float = 0.85,
     min_samples: int = 3,
+    posterior_factory: Callable[[], Posterior] | Type[Posterior] | None = None,
 ) -> Callable:
     """Class decorator that turns a class into a multi-task benchmark suite.
 
-    Any ``staticmethod`` or regular method whose name starts with ``task_``
-    is automatically registered as a benchmark task.  The class-level
-    ``dataset`` attribute is used as the default dataset for all tasks
-    (individual tasks can override it by using a ``dataset_<name>`` attribute).
+    Methods whose names start with ``task_`` are automatically registered.
+    The class-level ``dataset`` attribute is used as the default dataset;
+    individual tasks can override it via a ``dataset_<task_name>`` attribute.
 
     Args:
         confidence: Stopping confidence threshold.
         skip_threshold: Non-discriminating skip threshold.
         min_samples: Minimum samples before early stopping.
+        posterior_factory: Override the Bayesian model for all tasks.
+                           Individual tasks can further override via
+                           ``posterior_<task_name>`` class attributes.
 
     Returns:
-        The decorated class, augmented with a ``run()`` classmethod.
+        The decorated class, augmented with a ``run() -> BenchmarkReport``
+        classmethod and a ``run_async()`` async classmethod.
 
     Example::
 
-        @suite(confidence=0.95)
-        class Eval:
-            dataset = all_problems
+        from baysbench.posteriors import NormalPosterior
+
+        @suite(confidence=0.95, posterior_factory=NormalPosterior)
+        class QualityBenchmark:
+            dataset = problems
 
             @staticmethod
-            def task_math(problem):
-                return model_a(problem["q"]) == problem["a"], \\
-                       model_b(problem["q"]) == problem["a"]
+            def task_bleu(problem):
+                a = compute_bleu(model_a(problem["src"]), problem["ref"])
+                b = compute_bleu(model_b(problem["src"]), problem["ref"])
+                return a, b
 
-            @staticmethod
-            def task_code(problem):
-                return run_code(model_a, problem), run_code(model_b, problem)
-
-        report = Eval.run()
+        report = QualityBenchmark.run()
     """
 
     def decorator(cls: type) -> type:
@@ -180,6 +222,7 @@ def suite(
             confidence=confidence,
             skip_threshold=skip_threshold,
             min_samples=min_samples,
+            posterior_factory=posterior_factory,
         )
         default_dataset = getattr(cls, "dataset", None)
 
@@ -190,9 +233,14 @@ def suite(
             if not callable(fn):
                 continue
             task_name = attr_name[len("task_"):]
-            # Allow per-task dataset via dataset_<name> class attribute
             task_dataset = getattr(cls, f"dataset_{task_name}", default_dataset)
-            bench._tasks.append({"name": task_name, "fn": fn, "dataset": task_dataset})
+            task_posterior = getattr(cls, f"posterior_{task_name}", None)
+            bench._tasks.append({
+                "name": task_name,
+                "fn": fn,
+                "dataset": task_dataset,
+                "posterior_factory": task_posterior,
+            })
 
         cls._bench = bench  # type: ignore[attr-defined]
 
@@ -200,7 +248,12 @@ def suite(
         def run(klass: type) -> BenchmarkReport:
             return bench.run()
 
+        @classmethod  # type: ignore[misc]
+        async def run_async(klass: type) -> BenchmarkReport:
+            return await bench.run_async()
+
         cls.run = run  # type: ignore[attr-defined]
+        cls.run_async = run_async  # type: ignore[attr-defined]
         return cls
 
     return decorator

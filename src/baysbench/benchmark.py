@@ -1,11 +1,12 @@
-"""BayesianBenchmark: sequential testing engine for comparing two LLMs/agents."""
+"""BayesianBenchmark: posterior-generic sequential testing engine."""
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Type
 
-from .core import BetaPosterior, is_non_discriminating, prob_a_beats_b
+from .posteriors.base import Posterior
+from .posteriors.beta import BetaPosterior
 
 
 # ---------------------------------------------------------------------------
@@ -20,14 +21,18 @@ class TaskResult:
     name: str
     problems_tested: int
     total_problems: int
-    posterior_a: BetaPosterior
-    posterior_b: BetaPosterior
+    posterior_a: Posterior
+    posterior_b: Posterior
     p_a_beats_b: float
     skipped: bool = False
 
     @property
     def winner(self) -> str | None:
-        """'model_a', 'model_b', or None (inconclusive)."""
+        """'model_a', 'model_b', or None (inconclusive).
+
+        Uses the confidence threshold baked into p_a_beats_b; a result is
+        declared only when p ≥ 0.95 or p ≤ 0.05.
+        """
         if self.p_a_beats_b >= 0.95:
             return "model_a"
         if self.p_a_beats_b <= 0.05:
@@ -99,29 +104,39 @@ class BenchmarkReport:
 class BayesianBenchmark:
     """Sequential Bayesian benchmark for comparing two models (A vs B).
 
-    Stops evaluating a task early as soon as enough statistical evidence
-    accumulates, dramatically reducing the number of problems that need
-    to be evaluated.
+    Stops evaluating a task early once the posterior evidence crosses a
+    confidence threshold, dramatically reducing evaluation cost.
+
+    Works with *any* posterior type via the ``posterior_factory`` parameter —
+    swap in :class:`~baysbench.posteriors.NormalPosterior` for continuous
+    scores, or supply your own :class:`~baysbench.posteriors.Posterior`
+    subclass for custom Bayesian models.
 
     Args:
-        confidence: Posterior probability threshold to declare a winner.
-                    Stops when P(A>B) ≥ confidence or ≤ (1-confidence).
-        skip_threshold: Treats a task as non-discriminating and skips it
-                        when P(A>B) ∈ (1-skip_threshold, skip_threshold).
-        min_samples: Minimum problems to evaluate before any early stopping.
+        confidence: Stopping threshold. Declare a winner when
+                    P(A>B) ≥ confidence or ≤ (1-confidence).
+        skip_threshold: Skip a task as non-discriminating when
+                        P(A>B) ∈ (1-skip_threshold, skip_threshold).
+        min_samples: Minimum evaluations before any early stopping.
+        posterior_factory: Zero-argument callable that returns a fresh
+                           :class:`~baysbench.posteriors.Posterior`.
+                           Defaults to :class:`~baysbench.posteriors.BetaPosterior`
+                           (binary outcomes). Pass ``NormalPosterior`` for
+                           continuous score tasks.
 
-    Example::
+    Examples::
 
+        # Binary outcomes (default)
         bench = BayesianBenchmark(confidence=0.95)
 
-        @bench.task(dataset=math_problems)
-        def math(problem):
-            a_correct = model_a(problem["question"]) == problem["answer"]
-            b_correct = model_b(problem["question"]) == problem["answer"]
-            return a_correct, b_correct
+        # Continuous scores (BLEU, ROUGE, LLM-judge 0-1)
+        from baysbench.posteriors import NormalPosterior
+        bench = BayesianBenchmark(posterior_factory=NormalPosterior)
 
-        report = bench.run()
-        print(report.summary())
+        # Custom prior: expect ~30% BLEU baseline
+        bench = BayesianBenchmark(
+            posterior_factory=lambda: NormalPosterior(mu_0=0.30)
+        )
     """
 
     def __init__(
@@ -129,6 +144,7 @@ class BayesianBenchmark:
         confidence: float = 0.95,
         skip_threshold: float = 0.85,
         min_samples: int = 3,
+        posterior_factory: Callable[[], Posterior] | Type[Posterior] | None = None,
     ) -> None:
         if not (0.5 < confidence <= 1.0):
             raise ValueError("confidence must be in (0.5, 1.0]")
@@ -137,7 +153,26 @@ class BayesianBenchmark:
         self.confidence = confidence
         self.skip_threshold = skip_threshold
         self.min_samples = min_samples
+        self._posterior_factory: Callable[[], Posterior] = (
+            posterior_factory if posterior_factory is not None else BetaPosterior
+        )
         self._tasks: list[dict[str, Any]] = []
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _new_posterior(self) -> Posterior:
+        return self._posterior_factory()
+
+    def _is_non_discriminating(self, pa: Posterior, pb: Posterior) -> bool:
+        p = pa.prob_beats(pb)
+        return (1.0 - self.skip_threshold) < p < self.skip_threshold
+
+    def _stopping(self, pa: Posterior, pb: Posterior) -> tuple[bool, float]:
+        """Return (should_stop, p_a_beats_b)."""
+        p = pa.prob_beats(pb)
+        return (p >= self.confidence or p <= (1.0 - self.confidence)), p
 
     # ------------------------------------------------------------------
     # Decorator API
@@ -147,31 +182,44 @@ class BayesianBenchmark:
         self,
         name: str | None = None,
         dataset: Iterable[Any] | None = None,
+        posterior_factory: Callable[[], Posterior] | None = None,
     ) -> Callable:
         """Decorator to register an evaluation function as a benchmark task.
 
         The decorated function receives one problem at a time and must return
-        a ``(bool, bool)`` tuple: ``(model_a_correct, model_b_correct)``.
+        a tuple ``(value_a, value_b)`` where the value type matches the
+        posterior: ``bool`` for :class:`~baysbench.posteriors.BetaPosterior`,
+        ``float`` for :class:`~baysbench.posteriors.NormalPosterior`.
 
         Args:
-            name: Human-readable task name. Defaults to the function name.
-            dataset: Iterable of problems to evaluate. Can also be set later
-                     by assigning to ``fn.dataset``.
+            name: Task name (defaults to function name).
+            dataset: Iterable of problems.
+            posterior_factory: Override the benchmark-level posterior for
+                               this specific task.
 
         Example::
 
-            @bench.task(dataset=problems, name="arithmetic")
-            def arithmetic(problem):
-                a_correct = model_a(problem["q"]) == problem["a"]
-                b_correct = model_b(problem["q"]) == problem["a"]
-                return a_correct, b_correct
+            from baysbench.posteriors import NormalPosterior
+
+            bench = BayesianBenchmark()   # default: BetaPosterior
+
+            # Override a single task to use continuous scores
+            @bench.task(dataset=problems, posterior_factory=NormalPosterior)
+            def bleu_task(problem):
+                score_a = compute_bleu(model_a(problem), problem["ref"])
+                score_b = compute_bleu(model_b(problem), problem["ref"])
+                return score_a, score_b
         """
 
         def decorator(fn: Callable) -> Callable:
             task_name = name or fn.__name__
-            entry: dict[str, Any] = {"name": task_name, "fn": fn, "dataset": dataset}
+            entry: dict[str, Any] = {
+                "name": task_name,
+                "fn": fn,
+                "dataset": dataset,
+                "posterior_factory": posterior_factory,
+            }
             self._tasks.append(entry)
-            # Attach metadata for introspection
             fn._baysbench_task = entry  # type: ignore[attr-defined]
             return fn
 
@@ -185,82 +233,77 @@ class BayesianBenchmark:
         self,
         model_a: Callable[[Any], Any],
         model_b: Callable[[Any], Any],
-        score_fn: Callable[[Any, Any], bool],
+        score_fn: Callable[[Any, Any], Any],
         dataset: Iterable[Any],
         name: str = "task",
+        posterior_factory: Callable[[], Posterior] | None = None,
     ) -> TaskResult:
         """Directly compare two models on a dataset using a scoring function.
 
         Args:
-            model_a: Callable that takes a problem and returns a response.
-            model_b: Callable that takes a problem and returns a response.
-            score_fn: ``score_fn(problem, response) -> bool`` — True if correct.
+            model_a: ``model_a(problem) -> response``
+            model_b: ``model_b(problem) -> response``
+            score_fn: ``score_fn(problem, response) -> value`` where value is
+                      ``bool`` for binary posteriors or ``float`` for
+                      continuous posteriors.
             dataset: Iterable of problems.
-            name: Name for this comparison task.
+            name: Task name.
+            posterior_factory: Override the benchmark-level posterior.
 
         Returns:
-            :class:`TaskResult` with posteriors, winner, and efficiency stats.
+            :class:`TaskResult`
 
         Example::
 
+            # Binary
+            result = bench.compare(gpt4, gpt35, lambda p, r: r == p["a"], problems)
+
+            # Continuous (BLEU)
+            from baysbench.posteriors import NormalPosterior
             result = bench.compare(
-                model_a=gpt4,
-                model_b=gpt35,
-                score_fn=lambda p, r: r.strip() == p["answer"],
-                dataset=problems,
-                name="gsm8k",
+                gpt4, gpt35,
+                lambda p, r: bleu(r, p["ref"]),
+                problems,
+                posterior_factory=NormalPosterior,
             )
         """
+        factory = posterior_factory or self._posterior_factory
         problems = list(dataset)
-        post_a = BetaPosterior()
-        post_b = BetaPosterior()
+        post_a = factory()
+        post_b = factory()
 
         for i, problem in enumerate(problems):
-            output_a = model_a(problem)
-            output_b = model_b(problem)
-            post_a.observe_one(score_fn(problem, output_a))
-            post_b.observe_one(score_fn(problem, output_b))
+            post_a.observe_one(score_fn(problem, model_a(problem)))
+            post_b.observe_one(score_fn(problem, model_b(problem)))
             tested = i + 1
 
             if tested < self.min_samples:
                 continue
 
-            if is_non_discriminating(post_a, post_b, self.skip_threshold):
-                p = prob_a_beats_b(post_a, post_b)
+            if self._is_non_discriminating(post_a, post_b):
+                p = post_a.prob_beats(post_b)
                 return TaskResult(name, tested, len(problems), post_a, post_b, p, skipped=True)
 
-            p = prob_a_beats_b(post_a, post_b)
-            if p >= self.confidence or p <= (1.0 - self.confidence):
+            stop, p = self._stopping(post_a, post_b)
+            if stop:
                 return TaskResult(name, tested, len(problems), post_a, post_b, p)
 
-        p = prob_a_beats_b(post_a, post_b)
+        p = post_a.prob_beats(post_b)
         return TaskResult(name, len(problems), len(problems), post_a, post_b, p)
 
     async def compare_async(
         self,
         model_a: Callable[[Any], Any],
         model_b: Callable[[Any], Any],
-        score_fn: Callable[[Any, Any], bool],
+        score_fn: Callable[[Any, Any], Any],
         dataset: Iterable[Any],
         name: str = "task",
-        concurrency: int = 1,
+        posterior_factory: Callable[[], Posterior] | None = None,
     ) -> TaskResult:
-        """Async version of :meth:`compare` supporting async model callables.
+        """Async version of :meth:`compare` — accepts async model callables.
 
-        When ``concurrency > 1``, both models are called concurrently for the
-        same problem using ``asyncio.gather``.
-
-        Args:
-            model_a: Sync or async callable taking a problem → response.
-            model_b: Sync or async callable taking a problem → response.
-            score_fn: ``score_fn(problem, response) -> bool``.
-            dataset: Iterable of problems.
-            name: Task name.
-            concurrency: Number of problems to evaluate in parallel (default 1
-                         preserves sequential stopping semantics exactly).
-
-        Returns:
-            :class:`TaskResult`.
+        Both models are called concurrently per problem using
+        ``asyncio.gather``.
         """
 
         async def call(fn: Callable, problem: Any) -> Any:
@@ -268,9 +311,10 @@ class BayesianBenchmark:
                 return await fn(problem)
             return fn(problem)
 
+        factory = posterior_factory or self._posterior_factory
         problems = list(dataset)
-        post_a = BetaPosterior()
-        post_b = BetaPosterior()
+        post_a = factory()
+        post_b = factory()
 
         for i, problem in enumerate(problems):
             output_a, output_b = await asyncio.gather(
@@ -284,15 +328,15 @@ class BayesianBenchmark:
             if tested < self.min_samples:
                 continue
 
-            if is_non_discriminating(post_a, post_b, self.skip_threshold):
-                p = prob_a_beats_b(post_a, post_b)
+            if self._is_non_discriminating(post_a, post_b):
+                p = post_a.prob_beats(post_b)
                 return TaskResult(name, tested, len(problems), post_a, post_b, p, skipped=True)
 
-            p = prob_a_beats_b(post_a, post_b)
-            if p >= self.confidence or p <= (1.0 - self.confidence):
+            stop, p = self._stopping(post_a, post_b)
+            if stop:
                 return TaskResult(name, tested, len(problems), post_a, post_b, p)
 
-        p = prob_a_beats_b(post_a, post_b)
+        p = post_a.prob_beats(post_b)
         return TaskResult(name, len(problems), len(problems), post_a, post_b, p)
 
     # ------------------------------------------------------------------
@@ -300,26 +344,21 @@ class BayesianBenchmark:
     # ------------------------------------------------------------------
 
     def run(self) -> BenchmarkReport:
-        """Run all tasks registered via :meth:`task` and return a report.
-
-        Returns:
-            :class:`BenchmarkReport` aggregating all task results.
-        """
+        """Run all tasks registered via :meth:`task` and return a report."""
         report = BenchmarkReport()
         for task_def in self._tasks:
-            result = self._run_task(task_def)
-            report.task_results.append(result)
+            report.task_results.append(self._run_task(task_def))
         return report
 
     async def run_async(self) -> BenchmarkReport:
-        """Async version of :meth:`run` for tasks whose functions are async."""
+        """Async version of :meth:`run`."""
         report = BenchmarkReport()
         results = await asyncio.gather(*[self._run_task_async(t) for t in self._tasks])
         report.task_results.extend(results)
         return report
 
     # ------------------------------------------------------------------
-    # Internal helpers
+    # Internal task runners
     # ------------------------------------------------------------------
 
     def _run_task(self, task_def: dict[str, Any]) -> TaskResult:
@@ -328,28 +367,29 @@ class BayesianBenchmark:
         dataset = task_def.get("dataset") or getattr(fn, "dataset", None)
         if dataset is None:
             raise ValueError(f"Task '{name}' has no dataset. Pass dataset= to @bench.task().")
+        factory = task_def.get("posterior_factory") or self._posterior_factory
         problems = list(dataset)
-        post_a = BetaPosterior()
-        post_b = BetaPosterior()
+        post_a = factory()
+        post_b = factory()
 
         for i, problem in enumerate(problems):
-            correct_a, correct_b = fn(problem)
-            post_a.observe_one(correct_a)
-            post_b.observe_one(correct_b)
+            val_a, val_b = fn(problem)
+            post_a.observe_one(val_a)
+            post_b.observe_one(val_b)
             tested = i + 1
 
             if tested < self.min_samples:
                 continue
 
-            if is_non_discriminating(post_a, post_b, self.skip_threshold):
-                p = prob_a_beats_b(post_a, post_b)
+            if self._is_non_discriminating(post_a, post_b):
+                p = post_a.prob_beats(post_b)
                 return TaskResult(name, tested, len(problems), post_a, post_b, p, skipped=True)
 
-            p = prob_a_beats_b(post_a, post_b)
-            if p >= self.confidence or p <= (1.0 - self.confidence):
+            stop, p = self._stopping(post_a, post_b)
+            if stop:
                 return TaskResult(name, tested, len(problems), post_a, post_b, p)
 
-        p = prob_a_beats_b(post_a, post_b)
+        p = post_a.prob_beats(post_b)
         return TaskResult(name, len(problems), len(problems), post_a, post_b, p)
 
     async def _run_task_async(self, task_def: dict[str, Any]) -> TaskResult:
@@ -358,30 +398,31 @@ class BayesianBenchmark:
         dataset = task_def.get("dataset") or getattr(fn, "dataset", None)
         if dataset is None:
             raise ValueError(f"Task '{name}' has no dataset.")
+        factory = task_def.get("posterior_factory") or self._posterior_factory
         problems = list(dataset)
-        post_a = BetaPosterior()
-        post_b = BetaPosterior()
+        post_a = factory()
+        post_b = factory()
 
         for i, problem in enumerate(problems):
             if asyncio.iscoroutinefunction(fn):
                 result = await fn(problem)
             else:
                 result = fn(problem)
-            correct_a, correct_b = result
-            post_a.observe_one(correct_a)
-            post_b.observe_one(correct_b)
+            val_a, val_b = result
+            post_a.observe_one(val_a)
+            post_b.observe_one(val_b)
             tested = i + 1
 
             if tested < self.min_samples:
                 continue
 
-            if is_non_discriminating(post_a, post_b, self.skip_threshold):
-                p = prob_a_beats_b(post_a, post_b)
+            if self._is_non_discriminating(post_a, post_b):
+                p = post_a.prob_beats(post_b)
                 return TaskResult(name, tested, len(problems), post_a, post_b, p, skipped=True)
 
-            p = prob_a_beats_b(post_a, post_b)
-            if p >= self.confidence or p <= (1.0 - self.confidence):
+            stop, p = self._stopping(post_a, post_b)
+            if stop:
                 return TaskResult(name, tested, len(problems), post_a, post_b, p)
 
-        p = prob_a_beats_b(post_a, post_b)
+        p = post_a.prob_beats(post_b)
         return TaskResult(name, len(problems), len(problems), post_a, post_b, p)

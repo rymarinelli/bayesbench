@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "baysbench"
-version = "0.1.0"
+version = "0.2.0"
 description = "Bayesian sequential benchmarking for LLMs and agents"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -30,6 +30,19 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
     "ruff>=0.4",
+]
+huggingface = [
+    "huggingface_hub>=0.23",
+    "datasets>=2.19",
+]
+openai = [
+    "openai>=1.30",
+]
+anthropic = [
+    "anthropic>=0.28",
+]
+all = [
+    "baysbench[huggingface,openai,anthropic]",
 ]
 
 [project.scripts]
