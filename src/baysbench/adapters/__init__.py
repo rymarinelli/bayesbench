@@ -36,6 +36,11 @@ Available adapters
     — MTEB benchmark: STS + classification datasets and embedding model adapters.
     Requires: ``pip install baysbench[mteb]``
 
+:mod:`~baysbench.adapters.openclaw`
+    ``openclaw_agent``
+    — OpenClaw agent wrapper for baysbench callables.
+    Requires: ``pip install baysbench[openclaw]``
+
 Quick example::
 
     from baysbench.adapters.openai_compat import openai_model

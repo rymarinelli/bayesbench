@@ -31,10 +31,12 @@ Usage::
 
     print(bench.run().summary())
 """
+
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .base import _require
 
@@ -69,7 +71,7 @@ def anthropic_model(
     """
     _require("anthropic", "anthropic")
 
-    import anthropic as _anthropic  # type: ignore[import]
+    import anthropic as _anthropic
 
     client = _anthropic.Anthropic(api_key=api_key)
     _prompt_fn = prompt_fn or (lambda p: str(p))
@@ -109,7 +111,7 @@ def anthropic_model_async(
     """
     _require("anthropic", "anthropic")
 
-    import anthropic as _anthropic  # type: ignore[import]
+    import anthropic as _anthropic
 
     client = _anthropic.AsyncAnthropic(api_key=api_key)
     _prompt_fn = prompt_fn or (lambda p: str(p))

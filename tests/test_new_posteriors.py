@@ -1,8 +1,8 @@
 """Tests for DirichletPosterior, GammaPosterior, and the convenience API."""
+
 import pytest
 
 from baysbench.posteriors import DirichletPosterior, GammaPosterior, Posterior
-
 
 # ---------------------------------------------------------------------------
 # DirichletPosterior
@@ -74,7 +74,7 @@ class TestDirichletPosterior:
         p = DirichletPosterior(k=2)
         q = DirichletPosterior(k=2)
         for _ in range(50):
-            p.observe_one(True)   # 50 correct
+            p.observe_one(True)  # 50 correct
         for _ in range(50):
             q.observe_one(False)  # 50 wrong
         assert p.prob_beats(q) > 0.99
@@ -117,8 +117,6 @@ class TestDirichletPosterior:
         assert samples.shape == (100, 4)
 
     def test_sample_rows_sum_to_one(self):
-        import numpy as np
-
         p = DirichletPosterior(k=3)
         samples = p.sample(n=50)
         assert all(abs(row.sum() - 1.0) < 1e-10 for row in samples)
@@ -220,7 +218,7 @@ class TestGammaPosterior:
         a = GammaPosterior(higher_is_better=False)
         b = GammaPosterior(higher_is_better=False)
         for _ in range(30):
-            a.observe_one(10)   # fast
+            a.observe_one(10)  # fast
         for _ in range(30):
             b.observe_one(100)  # slow
         assert a.prob_beats(b) > 0.99
@@ -279,7 +277,7 @@ class TestGammaPosterior:
 
     def test_bool_observation_coerced(self):
         p = GammaPosterior()
-        p.observe_one(True)   # 1.0
+        p.observe_one(True)  # 1.0
         p.observe_one(False)  # 0.0
         assert p.n == 2
 

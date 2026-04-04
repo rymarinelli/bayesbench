@@ -58,14 +58,15 @@ Usage — async (preserves Inspect's native async model interface)::
     async_a = inspect_model_async("openai/gpt-4o")
     result = await bench.compare_async(async_a, async_b, includes_score, problems)
 """
+
 from __future__ import annotations
 
 import asyncio
 import re
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .base import _require
-
 
 # ---------------------------------------------------------------------------
 # Dataset conversion
@@ -133,14 +134,16 @@ def from_inspect_dataset(dataset: Any) -> list[dict]:
             target = raw_target or ""
             all_targets = [target] if target else []
 
-        problems.append({
-            "input": prompt,
-            "target": target,
-            "all_targets": all_targets,
-            "choices": getattr(sample, "choices", None),
-            "id": sample.id,
-            "metadata": sample.metadata or {},
-        })
+        problems.append(
+            {
+                "input": prompt,
+                "target": target,
+                "all_targets": all_targets,
+                "choices": getattr(sample, "choices", None),
+                "id": sample.id,
+                "metadata": sample.metadata or {},
+            }
+        )
     return problems
 
 
@@ -178,7 +181,7 @@ def inspect_model(
         response = model({"input": "What is 2+2?", "target": "4"})
     """
     _require("inspect_ai", "inspect")
-    from inspect_ai.model import ChatMessage, get_model  # type: ignore[import]
+    from inspect_ai.model import get_model
 
     _model = get_model(model_id)
 
@@ -186,12 +189,14 @@ def inspect_model(
         messages: list[Any] = []
         if system_prompt:
             try:
-                from inspect_ai.model import ChatMessageSystem  # type: ignore[import]
+                from inspect_ai.model import ChatMessageSystem
+
                 messages.append(ChatMessageSystem(content=system_prompt))
             except ImportError:
                 pass
         try:
-            from inspect_ai.model import ChatMessageUser  # type: ignore[import]
+            from inspect_ai.model import ChatMessageUser
+
             messages.append(ChatMessageUser(content=problem["input"]))
         except ImportError:
             messages.append({"role": "user", "content": problem["input"]})
@@ -224,7 +229,7 @@ def inspect_model_async(
         An ``async callable(problem: dict) -> str``.
     """
     _require("inspect_ai", "inspect")
-    from inspect_ai.model import get_model  # type: ignore[import]
+    from inspect_ai.model import get_model
 
     _model = get_model(model_id)
 
@@ -232,12 +237,14 @@ def inspect_model_async(
         messages: list[Any] = []
         if system_prompt:
             try:
-                from inspect_ai.model import ChatMessageSystem  # type: ignore[import]
+                from inspect_ai.model import ChatMessageSystem
+
                 messages.append(ChatMessageSystem(content=system_prompt))
             except ImportError:
                 pass
         try:
-            from inspect_ai.model import ChatMessageUser  # type: ignore[import]
+            from inspect_ai.model import ChatMessageUser
+
             messages.append(ChatMessageUser(content=problem["input"]))
         except ImportError:
             messages.append({"role": "user", "content": problem["input"]})

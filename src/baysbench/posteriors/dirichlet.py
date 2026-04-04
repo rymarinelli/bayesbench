@@ -8,6 +8,7 @@ Use this when outcomes are drawn from a fixed set of K categories:
 When K=2, this is equivalent to :class:`~baysbench.posteriors.BetaPosterior`
 with a symmetric prior.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -95,7 +96,7 @@ class DirichletPosterior(Posterior):
         a = self.alpha
         return float(a[self._target_class] / a.sum())
 
-    def prob_beats(self, other: "Posterior", n_samples: int = 10_000) -> float:
+    def prob_beats(self, other: Posterior, n_samples: int = 10_000) -> float:
         """P(target-class proportion A > target-class proportion B) via Monte Carlo.
 
         Args:
@@ -124,9 +125,7 @@ class DirichletPosterior(Posterior):
         dist = stats.beta(alpha_t, beta_t)
         return float(dist.ppf(lo)), float(dist.ppf(1.0 - lo))
 
-    def sample(
-        self, n: int = 1, rng: np.random.Generator | None = None
-    ) -> np.ndarray:
+    def sample(self, n: int = 1, rng: np.random.Generator | None = None) -> np.ndarray:
         """Draw ``n`` probability vectors from the Dirichlet posterior.
 
         Returns:

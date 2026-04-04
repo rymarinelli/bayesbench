@@ -36,10 +36,12 @@ Usage::
 
     print(bench.run().summary())
 """
+
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .base import _require
 
@@ -77,7 +79,7 @@ def hf_model(
     """
     _require("huggingface_hub", "huggingface")
 
-    from huggingface_hub import InferenceClient  # type: ignore[import]
+    from huggingface_hub import InferenceClient
 
     client = InferenceClient(model=model_id, token=api_key, base_url=base_url)
     _prompt_fn = prompt_fn or (lambda p: str(p))
@@ -119,7 +121,7 @@ def hf_model_async(
     """
     _require("huggingface_hub", "huggingface")
 
-    from huggingface_hub import AsyncInferenceClient  # type: ignore[import]
+    from huggingface_hub import AsyncInferenceClient
 
     client = AsyncInferenceClient(model=model_id, token=api_key, base_url=base_url)
     _prompt_fn = prompt_fn or (lambda p: str(p))
@@ -174,7 +176,7 @@ def hf_dataset(
     """
     _require("datasets", "huggingface")
 
-    from datasets import load_dataset  # type: ignore[import]
+    from datasets import load_dataset
 
     ds = load_dataset(path, name, split=split)
     if shuffle:

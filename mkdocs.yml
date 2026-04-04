@@ -1,6 +1,7 @@
-site_name: BayesBenchmark
-site_description: Bayesian Benchmarking for LLMs
-site_url: https://rymarinelli.github.io/bayesbenchmark/
+site_name: baysbench
+site_description: Bayesian sequential benchmarking for LLMs and agents.
+site_url: https://rymarinelli.github.io/baysbench/
+repo_url: https://github.com/rymarinelli/baysbench
 
 theme:
   name: material
@@ -10,9 +11,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [.]
+          paths: [src]
 
 nav:
   - Home: index.md
-
-repo_url: https://github.com/rymarinelli/bayesbenchmark

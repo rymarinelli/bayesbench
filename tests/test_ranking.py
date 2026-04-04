@@ -1,12 +1,10 @@
 """Tests for baysbench.ranking."""
-import asyncio
 
 import numpy as np
 import pytest
 
 from baysbench import BayesianRanker, RankingResult
 from baysbench.posteriors import NormalPosterior
-from baysbench.ranking import ModelRanking
 
 PROBLEMS = [{"q": str(i), "a": str(i)} for i in range(200)]
 

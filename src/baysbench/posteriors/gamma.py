@@ -6,6 +6,7 @@ Use this when observations are non-negative counts or durations:
 - Word count, character count, number of API calls
 - Any non-negative, approximately Poisson-distributed quantity
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -97,7 +98,7 @@ class GammaPosterior(Posterior):
         """Posterior mean rate E[λ] = α / β."""
         return self._alpha / self._beta
 
-    def prob_beats(self, other: "Posterior", n_samples: int = 10_000) -> float:
+    def prob_beats(self, other: Posterior, n_samples: int = 10_000) -> float:
         """Probability that this model's rate is "better" than ``other``.
 
         If ``higher_is_better`` is ``True``: returns P(λ_self > λ_other).
@@ -122,9 +123,7 @@ class GammaPosterior(Posterior):
         dist = stats.gamma(self._alpha, scale=1.0 / self._beta)
         return float(dist.ppf(lo)), float(dist.ppf(1.0 - lo))
 
-    def sample(
-        self, n: int = 1, rng: np.random.Generator | None = None
-    ) -> np.ndarray:
+    def sample(self, n: int = 1, rng: np.random.Generator | None = None) -> np.ndarray:
         """Draw ``n`` rate samples from the Gamma posterior.
 
         Returns:

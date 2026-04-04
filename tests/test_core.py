@@ -1,4 +1,5 @@
 """Tests for baysbench.core."""
+
 import pytest
 
 from baysbench.core import BetaPosterior, is_non_discriminating, prob_a_beats_b

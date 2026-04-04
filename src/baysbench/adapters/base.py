@@ -3,6 +3,7 @@
 An adapter is simply a callable ``(problem: Any) -> str``.  The protocol
 makes static type-checking work and serves as documentation.
 """
+
 from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable

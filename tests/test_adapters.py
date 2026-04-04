@@ -1,8 +1,8 @@
 """Tests for baysbench.adapters (mock-based — no real API calls)."""
+
 import pytest
 
 from baysbench.adapters.base import ModelAdapter, _require
-
 
 # ---------------------------------------------------------------------------
 # ModelAdapter protocol
@@ -52,11 +52,13 @@ class TestHuggingFaceAdapterMocked:
     def test_hf_model_raises_without_library(self, monkeypatch):
         """If huggingface_hub is absent, hf_model() raises ImportError at call time."""
         import sys
+
         # Temporarily hide the module if present
         orig = sys.modules.get("huggingface_hub")
         sys.modules["huggingface_hub"] = None  # type: ignore[assignment]
         try:
             from baysbench.adapters.huggingface import hf_model
+
             with pytest.raises((ImportError, AttributeError)):
                 model = hf_model("test/model", api_key="fake")
                 model({"question": "hi"})
@@ -81,7 +83,9 @@ class TestHuggingFaceAdapterMocked:
             choices = [FakeChoice()]
 
         class FakeClient:
-            def __init__(self, *a, **kw): pass
+            def __init__(self, *a, **kw):
+                pass
+
             def chat_completion(self, messages, **kw):
                 return FakeResponse()
 
@@ -90,7 +94,9 @@ class TestHuggingFaceAdapterMocked:
         monkeypatch.setitem(sys.modules, "huggingface_hub", mock_hub)
 
         import importlib
+
         import baysbench.adapters.huggingface as hf_mod
+
         importlib.reload(hf_mod)
 
         model = hf_mod.hf_model("test/model", api_key="fake")
@@ -106,10 +112,12 @@ class TestHuggingFaceAdapterMocked:
 class TestOpenAIAdapterMocked:
     def test_openai_model_missing_raises(self, monkeypatch):
         import sys
+
         orig = sys.modules.get("openai")
         sys.modules["openai"] = None  # type: ignore[assignment]
         try:
             from baysbench.adapters.openai_compat import openai_model
+
             with pytest.raises((ImportError, AttributeError)):
                 model = openai_model("gpt-4o", api_key="fake")
                 model({"question": "hi"})
@@ -148,7 +156,9 @@ class TestOpenAIAdapterMocked:
         monkeypatch.setitem(sys.modules, "openai", mock_openai)
 
         import importlib
+
         import baysbench.adapters.openai_compat as oa_mod
+
         importlib.reload(oa_mod)
 
         model = oa_mod.openai_model("gpt-4o", api_key="fake")
@@ -187,7 +197,9 @@ class TestOpenAIAdapterMocked:
         monkeypatch.setitem(sys.modules, "openai", mock_openai)
 
         import importlib
+
         import baysbench.adapters.openai_compat as oa_mod
+
         importlib.reload(oa_mod)
 
         model = oa_mod.openai_model(
@@ -208,10 +220,12 @@ class TestOpenAIAdapterMocked:
 class TestAnthropicAdapterMocked:
     def test_anthropic_model_missing_raises(self, monkeypatch):
         import sys
+
         orig = sys.modules.get("anthropic")
         sys.modules["anthropic"] = None  # type: ignore[assignment]
         try:
             from baysbench.adapters.anthropic_adapter import anthropic_model
+
             with pytest.raises((ImportError, AttributeError)):
                 model = anthropic_model("claude-opus-4-6", api_key="fake")
                 model({"question": "hi"})
@@ -244,7 +258,9 @@ class TestAnthropicAdapterMocked:
         monkeypatch.setitem(sys.modules, "anthropic", mock_anthropic)
 
         import importlib
+
         import baysbench.adapters.anthropic_adapter as ant_mod
+
         importlib.reload(ant_mod)
 
         model = ant_mod.anthropic_model("claude-opus-4-6", api_key="fake")

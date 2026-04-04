@@ -42,10 +42,12 @@ Usage (local Ollama)::
         api_key="ollama",
     )
 """
+
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .base import _require
 
@@ -82,7 +84,7 @@ def openai_model(
     """
     _require("openai", "openai")
 
-    from openai import OpenAI  # type: ignore[import]
+    from openai import OpenAI
 
     client = OpenAI(api_key=api_key, base_url=base_url, organization=organization)
     _prompt_fn = prompt_fn or (lambda p: str(p))
@@ -124,7 +126,7 @@ def openai_model_async(
     """
     _require("openai", "openai")
 
-    from openai import AsyncOpenAI  # type: ignore[import]
+    from openai import AsyncOpenAI
 
     client = AsyncOpenAI(api_key=api_key, base_url=base_url, organization=organization)
     _prompt_fn = prompt_fn or (lambda p: str(p))

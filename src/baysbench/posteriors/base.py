@@ -3,6 +3,7 @@
 All posterior types must satisfy this interface so the benchmark engine
 remains agnostic to the choice of Bayesian model.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -30,7 +31,7 @@ class Posterior(ABC):
         """
 
     @abstractmethod
-    def prob_beats(self, other: "Posterior", n_samples: int = 10_000) -> float:
+    def prob_beats(self, other: Posterior, n_samples: int = 10_000) -> float:
         """Compute P(self's metric > other's metric).
 
         Args:

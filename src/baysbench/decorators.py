@@ -65,10 +65,12 @@ Styles
 
     report = MathBenchmark.run()
 """
+
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable, Iterable, Type
+from collections.abc import Callable, Iterable
+from typing import Any
 
 from .benchmark import BayesianBenchmark, BenchmarkReport, TaskResult
 from .posteriors.base import Posterior
@@ -83,7 +85,7 @@ def benchmark(
     confidence: float = 0.95,
     skip_threshold: float = 0.85,
     min_samples: int = 3,
-    posterior_factory: Callable[[], Posterior] | Type[Posterior] | None = None,
+    posterior_factory: Callable[[], Posterior] | type[Posterior] | None = None,
 ) -> Callable:
     """Decorate a scoring function to create a runnable benchmark task.
 
@@ -180,7 +182,7 @@ def suite(
     confidence: float = 0.95,
     skip_threshold: float = 0.85,
     min_samples: int = 3,
-    posterior_factory: Callable[[], Posterior] | Type[Posterior] | None = None,
+    posterior_factory: Callable[[], Posterior] | type[Posterior] | None = None,
 ) -> Callable:
     """Class decorator that turns a class into a multi-task benchmark suite.
 
@@ -232,15 +234,17 @@ def suite(
             fn = getattr(cls, attr_name)
             if not callable(fn):
                 continue
-            task_name = attr_name[len("task_"):]
+            task_name = attr_name[len("task_") :]
             task_dataset = getattr(cls, f"dataset_{task_name}", default_dataset)
             task_posterior = getattr(cls, f"posterior_{task_name}", None)
-            bench._tasks.append({
-                "name": task_name,
-                "fn": fn,
-                "dataset": task_dataset,
-                "posterior_factory": task_posterior,
-            })
+            bench._tasks.append(
+                {
+                    "name": task_name,
+                    "fn": fn,
+                    "dataset": task_dataset,
+                    "posterior_factory": task_posterior,
+                }
+            )
 
         cls._bench = bench  # type: ignore[attr-defined]
 

@@ -1,4 +1,5 @@
 """Tests for baysbench.adapters.mteb (mock-based — no downloads needed)."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -6,10 +7,8 @@ import pytest
 
 from baysbench.adapters.mteb import (
     _KNNClassifier,
-    make_classification_score_fn,
     sts_score_fn,
 )
-
 
 # ---------------------------------------------------------------------------
 # _KNNClassifier (pure numpy — always available)
@@ -70,7 +69,7 @@ class TestStsScorefn:
         e1 = np.array([1.0, 0.0])
         # cos_target = dot(e1, e2) when both normalised
         # e2 = [cos_target, sqrt(1 - cos_target^2)]
-        e2 = np.array([cos_target, np.sqrt(max(0.0, 1.0 - cos_target ** 2))])
+        e2 = np.array([cos_target, np.sqrt(max(0.0, 1.0 - cos_target**2))])
         return np.stack([e1, e2])
 
     def test_perfect_agreement(self):
@@ -122,16 +121,11 @@ class TestMakeClassificationScoreFn:
         A /= np.linalg.norm(A, axis=1, keepdims=True)
         B /= np.linalg.norm(B, axis=1, keepdims=True)
 
-        train_data = (
-            [{"text": f"a_{i}", "label": "A"} for i in range(30)]
-            + [{"text": f"b_{i}", "label": "B"} for i in range(30)]
-        )
-        train_embeddings = np.vstack([A, B])
-
+        train_data = [{"text": f"a_{i}", "label": "A"} for i in range(30)] + [
+            {"text": f"b_{i}", "label": "B"} for i in range(30)
+        ]
         # Fake callable that looks up precomputed embedding by index
-        _embed_map = {
-            f"a_{i}": A[i] for i in range(30)
-        } | {f"b_{i}": B[i] for i in range(30)}
+        _embed_map = {f"a_{i}": A[i] for i in range(30)} | {f"b_{i}": B[i] for i in range(30)}
         # Also add test points
         test_a = rng.normal([2] * dim, 0.2, (5, dim))
         test_a /= np.linalg.norm(test_a, axis=1, keepdims=True)
@@ -155,10 +149,9 @@ class TestMakeClassificationScoreFn:
         def score_fn(problem: dict, response: np.ndarray) -> bool:
             return clf.predict(response) == problem["label"]
 
-        test_data = (
-            [{"text": f"ta_{i}", "label": "A"} for i in range(5)]
-            + [{"text": f"tb_{i}", "label": "B"} for i in range(5)]
-        )
+        test_data = [{"text": f"ta_{i}", "label": "A"} for i in range(5)] + [
+            {"text": f"tb_{i}", "label": "B"} for i in range(5)
+        ]
         return score_fn, fake_model, test_data
 
     def test_correct_classification(self):
@@ -170,7 +163,7 @@ class TestMakeClassificationScoreFn:
     def test_score_fn_returns_bool(self):
         score_fn, model, test_data = self._make_fn()
         result = score_fn(test_data[0], model(test_data[0]))
-        assert isinstance(result, (bool, np.bool_))
+        assert isinstance(result, bool | np.bool_)
 
 
 # ---------------------------------------------------------------------------
@@ -181,10 +174,12 @@ class TestMakeClassificationScoreFn:
 class TestMtebMissingLibrary:
     def test_raises_without_mteb(self, monkeypatch):
         import sys
+
         orig = sys.modules.get("mteb")
         sys.modules["mteb"] = None  # type: ignore[assignment]
         try:
             from baysbench.adapters.mteb import mteb_sts_dataset
+
             with pytest.raises((ImportError, AttributeError)):
                 mteb_sts_dataset("STSBenchmark")
         finally:
@@ -195,10 +190,12 @@ class TestMtebMissingLibrary:
 
     def test_st_model_raises_without_sentence_transformers(self, monkeypatch):
         import sys
+
         orig = sys.modules.get("sentence_transformers")
         sys.modules["sentence_transformers"] = None  # type: ignore[assignment]
         try:
             from baysbench.adapters.mteb import st_model
+
             with pytest.raises((ImportError, AttributeError)):
                 model = st_model("all-MiniLM-L6-v2")
                 model({"sentence1": "hi", "sentence2": "hello", "gold_score": 0.8})
@@ -218,6 +215,7 @@ class TestStsIntegrationWithBenchmark:
     def test_sts_comparison_with_normal_posterior(self):
         """End-to-end: compare two fake embedding models on synthetic STS data."""
         import numpy as np
+
         from baysbench import BayesianBenchmark
         from baysbench.posteriors import NormalPosterior
 
@@ -229,12 +227,14 @@ class TestStsIntegrationWithBenchmark:
             problems = []
             for _ in range(n):
                 gold = rng.uniform(0, 1)
-                problems.append({
-                    "sentence1": "a",
-                    "sentence2": "b",
-                    "gold_score": gold,
-                    "_gold": gold,  # kept for model to cheat
-                })
+                problems.append(
+                    {
+                        "sentence1": "a",
+                        "sentence2": "b",
+                        "gold_score": gold,
+                        "_gold": gold,  # kept for model to cheat
+                    }
+                )
             return problems
 
         def perfect_model(problem: dict) -> np.ndarray:
@@ -242,7 +242,7 @@ class TestStsIntegrationWithBenchmark:
             gold = problem["_gold"]
             cos = gold * 2 - 1
             e1 = np.array([1.0] + [0.0] * (dim - 1))
-            e2 = np.array([cos, np.sqrt(max(0.0, 1 - cos ** 2))] + [0.0] * (dim - 2))
+            e2 = np.array([cos, np.sqrt(max(0.0, 1 - cos**2))] + [0.0] * (dim - 2))
             return np.stack([e1, e2])
 
         def random_model(problem: dict) -> np.ndarray:
@@ -257,9 +257,9 @@ class TestStsIntegrationWithBenchmark:
         problems = make_sts_problems(200)
         # skip_threshold just above 0.5 makes the non-discriminating window negligibly
         # narrow, so the test runs until it reaches the confidence threshold
-        bench = BayesianBenchmark(confidence=0.95, min_samples=10,
-                                  skip_threshold=0.51,
-                                  posterior_factory=NormalPosterior)
+        bench = BayesianBenchmark(
+            confidence=0.95, min_samples=10, skip_threshold=0.51, posterior_factory=NormalPosterior
+        )
 
         result = bench.compare(
             model_a=perfect_model,

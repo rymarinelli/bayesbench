@@ -1,11 +1,9 @@
 """Tests for baysbench.benchmark and baysbench.decorators."""
-import asyncio
 
 import pytest
 
 from baysbench import BayesianBenchmark, benchmark, suite
 from baysbench.benchmark import BenchmarkReport, TaskResult
-
 
 # ---------------------------------------------------------------------------
 # Deterministic mock models

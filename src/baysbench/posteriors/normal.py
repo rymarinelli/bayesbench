@@ -24,6 +24,7 @@ The marginal posterior for mu is a Student-t distribution:
 
 P(mu_A > mu_B) is estimated via Monte Carlo sampling from both posteriors.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -85,9 +86,7 @@ class NormalPosterior(Posterior):
         self.kappa_n += 1
         self.mu_n = (kappa_old * mu_old + x) / self.kappa_n
         self.alpha_n += 0.5
-        self.beta_n += (
-            (kappa_old / (2.0 * self.kappa_n)) * (x - mu_old) ** 2
-        )
+        self.beta_n += (kappa_old / (2.0 * self.kappa_n)) * (x - mu_old) ** 2
         self._n += 1
 
     def observe_batch(self, values: list[float]) -> None:
@@ -118,7 +117,7 @@ class NormalPosterior(Posterior):
         scale = float(np.sqrt(self.beta_n / (self.alpha_n * self.kappa_n)))
         return stats.t.rvs(df=df, loc=self.mu_n, scale=scale, size=n)
 
-    def prob_beats(self, other: "NormalPosterior", n_samples: int = 10_000) -> float:
+    def prob_beats(self, other: Posterior, n_samples: int = 10_000) -> float:
         """Estimate P(self mean score > other mean score) via Monte Carlo.
 
         Args:
@@ -128,13 +127,13 @@ class NormalPosterior(Posterior):
         Returns:
             Probability in [0, 1].
         """
+        if not isinstance(other, NormalPosterior):
+            raise TypeError("NormalPosterior.prob_beats expects another NormalPosterior")
+
         samples_self = self.sample(n_samples)
         samples_other = other.sample(n_samples)
         return float(np.mean(samples_self > samples_other))
 
     def __repr__(self) -> str:
         lo, hi = self.credible_interval()
-        return (
-            f"NormalPosterior(mu={self.mu_n:.3f}, n={self._n}, "
-            f"95%CI=[{lo:.3f}, {hi:.3f}])"
-        )
+        return f"NormalPosterior(mu={self.mu_n:.3f}, n={self._n}, " f"95%CI=[{lo:.3f}, {hi:.3f}])"

@@ -32,13 +32,15 @@ Usage::
     # Async
     result = await ranker.rank_async(dataset=problems, score_fn=score)
 """
+
 from __future__ import annotations
 
 import asyncio
 import functools
 import logging
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Type
+from typing import Any
 
 from .posteriors.base import Posterior
 from .posteriors.beta import BetaPosterior
@@ -220,7 +222,7 @@ class BayesianRanker:
         confidence: float = 0.95,
         skip_threshold: float = 0.85,
         min_samples: int = 5,
-        posterior_factory: Callable[[], Posterior] | Type[Posterior] | None = None,
+        posterior_factory: Callable[[], Posterior] | type[Posterior] | None = None,
     ) -> None:
         if not (0.5 < confidence <= 1.0):
             raise ValueError("confidence must be in (0.5, 1.0]")
@@ -237,7 +239,7 @@ class BayesianRanker:
     # Model registration
     # ------------------------------------------------------------------
 
-    def add_model(self, name: str, fn: Callable[[Any], Any]) -> "BayesianRanker":
+    def add_model(self, name: str, fn: Callable[[Any], Any]) -> BayesianRanker:
         """Register a model to include in the ranking.
 
         Args:

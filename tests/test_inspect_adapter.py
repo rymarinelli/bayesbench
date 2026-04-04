@@ -1,8 +1,6 @@
 """Tests for baysbench.adapters.inspect_ai (mock-based — no real API calls)."""
-from __future__ import annotations
 
-import re
-import types
+from __future__ import annotations
 
 import pytest
 
@@ -15,10 +13,10 @@ from baysbench.adapters.inspect_ai import (
     pattern_score,
 )
 
-
 # ---------------------------------------------------------------------------
 # Minimal Inspect Sample stub (no inspect_ai installation needed)
 # ---------------------------------------------------------------------------
+
 
 class _FakeSample:
     def __init__(self, input, target, choices=None, id=None, metadata=None):
@@ -223,10 +221,12 @@ class TestChoiceScore:
 class TestInspectModelMissingLibrary:
     def test_raises_import_error_without_inspect_ai(self, monkeypatch):
         import sys
+
         orig = sys.modules.get("inspect_ai")
         sys.modules["inspect_ai"] = None  # type: ignore[assignment]
         try:
             from baysbench.adapters.inspect_ai import inspect_model
+
             with pytest.raises((ImportError, AttributeError)):
                 model = inspect_model("openai/gpt-4o")
                 model({"input": "hi", "target": "hello"})
