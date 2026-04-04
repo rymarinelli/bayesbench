@@ -16,6 +16,7 @@ Options::
     baysbench my_benchmark.py --confidence 0.99 --min-samples 5
 
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,7 +32,7 @@ def _load_module(path: Path):
     if spec is None or spec.loader is None:
         raise ImportError(f"Cannot load module from {path}")
     mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    spec.loader.exec_module(mod)
     return mod
 
 
@@ -121,7 +122,10 @@ def main(argv: list[str] | None = None) -> int:
     if suite_classes:
         for cls in suite_classes:
             print(f"\n--- {cls.__name__} ---")
-            report = cls.run()
+            run_fn = getattr(cls, "run", None)
+            if not callable(run_fn):
+                continue
+            report = run_fn()
             print(report.summary())
         return 0
 

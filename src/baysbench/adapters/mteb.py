@@ -87,14 +87,15 @@ Usage — rank N embedding models::
     )
     print(result.summary())
 """
+
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 
 from .base import _require
-
 
 # ---------------------------------------------------------------------------
 # Dataset loaders
@@ -135,7 +136,7 @@ def mteb_sts_dataset(
         problems = mteb_sts_dataset("STSBenchmark", max_samples=300)
     """
     _require("mteb", "mteb")
-    import mteb  # type: ignore[import]
+    import mteb
 
     task = mteb.get_task(task_name)
     task.load_data(eval_splits=[split])
@@ -150,13 +151,15 @@ def mteb_sts_dataset(
     problems: list[dict] = []
     for row in raw:
         raw_score = float(row.get("score", row.get("similarity_score", 0)))
-        problems.append({
-            "sentence1": row.get("sentence1", row.get("text1", "")),
-            "sentence2": row.get("sentence2", row.get("text2", "")),
-            "gold_score": raw_score / scale,
-            "raw_score": raw_score,
-            "task": task_name,
-        })
+        problems.append(
+            {
+                "sentence1": row.get("sentence1", row.get("text1", "")),
+                "sentence2": row.get("sentence2", row.get("text2", "")),
+                "gold_score": raw_score / scale,
+                "raw_score": raw_score,
+                "task": task_name,
+            }
+        )
 
     if shuffle:
         rng = np.random.default_rng(seed)
@@ -203,7 +206,7 @@ def mteb_classification_dataset(
         # data["test"]  → [{text: ..., label: ...}, ...]
     """
     _require("mteb", "mteb")
-    import mteb  # type: ignore[import]
+    import mteb
 
     task = mteb.get_task(task_name)
     splits_to_load = list({test_split, train_split})
@@ -277,7 +280,7 @@ def st_model(
         score = sts_score_fn(problem, embeddings)
     """
     _require("sentence_transformers", "mteb")
-    from sentence_transformers import SentenceTransformer  # type: ignore[import]
+    from sentence_transformers import SentenceTransformer
 
     if isinstance(model_name_or_model, str):
         _model = SentenceTransformer(model_name_or_model, device=device)
@@ -323,7 +326,7 @@ def mteb_classification_model(
         ``callable(problem: dict) -> np.ndarray`` of shape ``(dim,)``.
     """
     _require("sentence_transformers", "mteb")
-    from sentence_transformers import SentenceTransformer  # type: ignore[import]
+    from sentence_transformers import SentenceTransformer
 
     if isinstance(model_name_or_model, str):
         _model = SentenceTransformer(model_name_or_model, device=device)
@@ -490,7 +493,7 @@ def mteb_task_info(task_name: str) -> dict:
         Dict with keys ``name``, ``type``, ``languages``, ``domains``.
     """
     _require("mteb", "mteb")
-    import mteb  # type: ignore[import]
+    import mteb
 
     task = mteb.get_task(task_name)
     meta = task.metadata

@@ -3,6 +3,7 @@
 Use this when each evaluation produces a binary correct/incorrect outcome,
 e.g. exact-match, pass/fail unit tests, multiple-choice accuracy.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -41,7 +42,7 @@ class BetaPosterior(Posterior):
         else:
             self.beta += 1
 
-    def observe(self, success: bool) -> "BetaPosterior":
+    def observe(self, success: bool) -> BetaPosterior:
         """Return a *new* updated posterior (immutable style)."""
         if success:
             return BetaPosterior(self.alpha + 1, self.beta)
@@ -66,7 +67,7 @@ class BetaPosterior(Posterior):
         tail = (1 - ci) / 2
         return float(dist.ppf(tail)), float(dist.ppf(1 - tail))
 
-    def prob_beats(self, other: "BetaPosterior", n_samples: int = 10_000) -> float:  # noqa: ARG002
+    def prob_beats(self, other: Posterior, n_samples: int = 10_000) -> float:  # noqa: ARG002
         """Compute P(self accuracy > other accuracy) via numerical integration.
 
         Uses the closed-form identity:
@@ -78,8 +79,12 @@ class BetaPosterior(Posterior):
 
         def integrand(x: float) -> float:
             return stats.beta.pdf(x, self.alpha, self.beta) * stats.beta.cdf(
-                x, other.alpha, other.beta
+                x, other_beta.alpha, other_beta.beta
             )
+
+        if not isinstance(other, BetaPosterior):
+            raise TypeError("BetaPosterior.prob_beats expects another BetaPosterior")
+        other_beta = other
 
         result, _ = integrate.quad(integrand, 0.0, 1.0, limit=100)
         return float(np.clip(result, 0.0, 1.0))

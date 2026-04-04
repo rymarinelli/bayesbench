@@ -1,9 +1,9 @@
 """Tests for baysbench.posteriors."""
+
 import numpy as np
 import pytest
 
 from baysbench.posteriors import BetaPosterior, NormalPosterior, Posterior
-
 
 # ---------------------------------------------------------------------------
 # Posterior protocol conformance
@@ -71,8 +71,10 @@ class TestBetaPosterior:
         assert 0.0 <= lo < hi <= 1.0
 
     def test_ci_narrows_with_more_data(self):
-        few = BetaPosterior(); few.observe_batch(5, 10)
-        many = BetaPosterior(); many.observe_batch(50, 100)
+        few = BetaPosterior()
+        few.observe_batch(5, 10)
+        many = BetaPosterior()
+        many.observe_batch(50, 100)
         w_few = few.credible_interval()[1] - few.credible_interval()[0]
         w_many = many.credible_interval()[1] - many.credible_interval()[0]
         assert w_few > w_many
@@ -126,8 +128,12 @@ class TestNormalPosterior:
         assert lo < hi
 
     def test_ci_narrows_with_more_data(self):
-        few = NormalPosterior(); [few.observe_one(0.7) for _ in range(5)]
-        many = NormalPosterior(); [many.observe_one(0.7) for _ in range(50)]
+        few = NormalPosterior()
+        for _ in range(5):
+            few.observe_one(0.7)
+        many = NormalPosterior()
+        for _ in range(50):
+            many.observe_one(0.7)
         w_few = few.credible_interval()[1] - few.credible_interval()[0]
         w_many = many.credible_interval()[1] - many.credible_interval()[0]
         assert w_few > w_many

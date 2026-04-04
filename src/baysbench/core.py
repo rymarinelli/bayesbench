@@ -3,11 +3,13 @@
 The canonical implementations now live in :mod:`baysbench.posteriors`.
 This module keeps existing imports working.
 """
+
 from __future__ import annotations
+
+from .posteriors.base import Posterior
 
 # Re-export for backward compatibility
 from .posteriors.beta import BetaPosterior
-from .posteriors.base import Posterior
 
 
 def prob_a_beats_b(posterior_a: BetaPosterior, posterior_b: BetaPosterior) -> float:

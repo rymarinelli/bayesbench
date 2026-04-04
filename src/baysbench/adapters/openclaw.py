@@ -14,6 +14,7 @@ Usage::
     agent_a = openclaw_agent(my_openclaw_agent)
     response = agent_a({"input": "Solve 2+2"})
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -58,8 +59,7 @@ def openclaw_agent(
             response = agent(prompt)
         else:
             raise TypeError(
-                "OpenClaw adapter expected an agent with run(prompt) "
-                "or __call__(prompt)."
+                "OpenClaw adapter expected an agent with run(prompt) " "or __call__(prompt)."
             )
         return _extract_text(response)
 

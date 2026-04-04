@@ -105,9 +105,11 @@ Quick start::
     from baysbench.adapters.openai_compat  import openai_model
     from baysbench.adapters.anthropic_adapter import anthropic_model
 """
+
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Callable, Iterable
+from typing import Any
 
 from .benchmark import BayesianBenchmark, BenchmarkReport, TaskResult
 from .core import BetaPosterior, is_non_discriminating, prob_a_beats_b
