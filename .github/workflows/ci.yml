@@ -56,7 +56,7 @@ jobs:
           cache: pip
 
       - name: Install ruff
-        run: pip install ruff
+        run: pip install "ruff>=0.4,<0.5"
 
       - name: Check style
         run: ruff check src/ tests/
