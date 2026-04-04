@@ -1,138 +1,34 @@
-# bayesbench
+# bayesbench documentation
 
 **Bayesian sequential benchmarking for LLMs and agents.**
 
 `bayesbench` helps you stop evaluations as soon as posterior evidence is strong enough,
 instead of evaluating every model on every example.
 
-## Why use bayesbench?
+## What you'll find in these docs
 
-- **Lower eval cost:** stop early when confidence is reached.
+- **[Getting started](getting-started.md):** installation, first benchmark, CLI usage.
+- **[Workflows](workflows.md):** end-to-end templates for LLM and agentic evaluations.
+- **[Examples gallery](examples.md):** copy-pasteable snippets mapped to the `examples/` folder.
+- **[Concepts](concepts.md):** confidence, early stopping, posterior choices, and tuning tips.
+- **[Adapters](adapters.md):** provider/framework integrations and when to use each.
+- **[API reference](api-reference.md):** core classes and methods.
+
+## Why bayesbench
+
+- **Lower evaluation cost:** stop when evidence is sufficient.
 - **Statistically principled:** Bayesian posteriors and credible intervals.
-- **Flexible inputs:** binary or continuous scores.
+- **Flexible metrics:** binary and continuous scoring.
 - **Practical integrations:** OpenAI-compatible APIs, Anthropic, Hugging Face, Inspect, MTEB, and OpenClaw.
 
-## Install
+## Typical evaluation journey
 
-```bash
-pip install bayesbench
-```
+1. Pick a workflow that matches your stack (Inspect, MTEB, OpenAI-compatible, OpenClaw).
+2. Start with `confidence=0.95` and a small `min_samples` (for fast iteration).
+3. Run benchmarks and inspect **winner**, **P(A > B)**, and **efficiency**.
+4. Raise confidence to `0.99` for higher-stakes final runs.
+5. Export reports to CSV/JSON for tracking over time.
 
-Optional integrations:
+## Need a fast start?
 
-```bash
-pip install "bayesbench[openai]"
-pip install "bayesbench[anthropic]"
-pip install "bayesbench[huggingface]"
-pip install "bayesbench[inspect]"
-pip install "bayesbench[mteb]"
-pip install "bayesbench[openclaw]"
-pip install "bayesbench[all]"
-```
-
-## Quick start
-
-### Pairwise comparison
-
-```python
-from bayesbench import benchmark
-
-@benchmark(
-    model_a=lambda p: big_model(p["question"]),
-    model_b=lambda p: small_model(p["question"]),
-    dataset=problems,
-    confidence=0.95,
-)
-def exact_match(problem, response):
-    return response.strip() == problem["answer"]
-
-result = exact_match.run()
-print(result.winner)
-print(result.efficiency)
-print(result.p_a_beats_b)
-```
-
-### Rank multiple models
-
-```python
-from bayesbench import BayesianRanker
-
-ranker = BayesianRanker(confidence=0.95)
-ranker.add_model("large", large_model)
-ranker.add_model("medium", medium_model)
-ranker.add_model("small", small_model)
-
-result = ranker.rank(dataset=problems, score_fn=lambda p, r: r == p["answer"])
-print(result.summary())
-```
-
-
-## Benchmarking playbooks
-
-If you want end-to-end examples by use case, see **[Workflows](workflows.md)**:
-
-- **LLM benchmarking**: AISI Inspect, MTEB embeddings, OpenAI-compatible A/B comparisons
-- **Agentic benchmarking**: OpenClaw agent-vs-agent and agent-vs-LLM workflows
-
-## Core concepts
-
-- **Confidence threshold (`confidence`)**
-  - The stopping rule, e.g. `0.95` means stop when posterior win probability reaches 95%.
-- **Minimum samples (`min_samples`)**
-  - Prevents stopping too early from tiny sample sizes.
-- **Skip threshold (`skip_threshold`)**
-  - Skips non-discriminating examples where both models behave similarly.
-- **Posterior family**
-  - Use `BetaPosterior` for binary outcomes and `NormalPosterior` for continuous scores.
-
-## Continuous-score benchmarking
-
-```python
-from bayesbench import BayesianBenchmark
-from bayesbench.posteriors import NormalPosterior
-
-bench = BayesianBenchmark(confidence=0.95, posterior_factory=NormalPosterior)
-
-result = bench.compare(
-    model_a=large_model,
-    model_b=small_model,
-    score_fn=lambda p, r: bleu(r, p["reference"]),
-    dataset=translation_examples,
-)
-```
-
-## Adapter example: OpenClaw
-
-```python
-from bayesbench.adapters.openclaw import openclaw_agent
-
-agent = openclaw_agent(my_openclaw_agent)
-response = agent({"input": "Solve 17 * 19"})
-```
-
-## CLI
-
-```bash
-bayesbench my_benchmark.py
-bayesbench my_benchmark.py --confidence 0.99 --min-samples 10 --skip-threshold 0.90
-bayesbench --version
-```
-
-Your benchmark file should expose either:
-
-- `bench = BayesianBenchmark(...)`, or
-- a `@suite`-decorated class.
-
-## Docs development
-
-```bash
-pip install -e ".[docs]"
-mkdocs serve
-mkdocs build --strict
-```
-
-## Next steps
-
-- Browse source examples in `examples/`.
-- See `README.md` for a broader project overview.
-- Contribute improvements via `CONTRIBUTING.md`.
+Go to **[Getting started](getting-started.md)** for a minimal script you can run in minutes.
