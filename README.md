@@ -352,6 +352,9 @@ MIT — see [LICENSE](LICENSE).
 
 Project docs are built with **MkDocs Material** and can be deployed automatically through the `Docs` GitHub Actions workflow.
 
+- Start here: `docs/index.md`
+- Workflow guides (LLM + agentic benchmarking): `docs/workflows.md`
+
 ```bash
 pip install -e ".[docs]"
 mkdocs serve

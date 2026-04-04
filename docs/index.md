@@ -66,6 +66,14 @@ result = ranker.rank(dataset=problems, score_fn=lambda p, r: r == p["answer"])
 print(result.summary())
 ```
 
+
+## Benchmarking playbooks
+
+If you want end-to-end examples by use case, see **[Workflows](workflows.md)**:
+
+- **LLM benchmarking**: AISI Inspect, MTEB embeddings, OpenAI-compatible A/B comparisons
+- **Agentic benchmarking**: OpenClaw agent-vs-agent and agent-vs-LLM workflows
+
 ## Core concepts
 
 - **Confidence threshold (`confidence`)**
