@@ -7,7 +7,7 @@
 [![CI](https://github.com/rymarinelli/baysbench/actions/workflows/ci.yml/badge.svg)](https://github.com/rymarinelli/baysbench/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/baysbench)](https://pypi.org/project/baysbench/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License: SSPL-1.0](https://img.shields.io/badge/license-SSPL--1.0-orange)](LICENSE)
 [![codecov](https://codecov.io/gh/rymarinelli/baysbench/branch/main/graph/badge.svg)](https://codecov.io/gh/rymarinelli/baysbench)
 
 Stop evaluating when you have enough evidence — not when you run out of problems.
@@ -43,11 +43,12 @@ pip install baysbench
 **Optional framework integrations:**
 
 ```bash
-pip install bayesbench[openai]        # OpenAI, Groq, Together AI, Ollama, vLLM, …
-pip install bayesbench[anthropic]     # Anthropic (Claude)
-pip install bayesbench[huggingface]   # HuggingFace Inference API + datasets
-pip install bayesbench[inspect]       # AISI Inspect eval framework
-pip install bayesbench[mteb]          # MTEB embedding benchmark
+pip install baysbench[openai]        # OpenAI, Groq, Together AI, Ollama, vLLM, …
+pip install baysbench[anthropic]     # Anthropic (Claude)
+pip install baysbench[huggingface]   # HuggingFace Inference API + datasets
+pip install baysbench[inspect]       # AISI Inspect eval framework
+pip install baysbench[mteb]          # MTEB embedding benchmark
+pip install baysbench[openclaw]      # OpenClaw agents
 pip install baysbench[all]           # everything above
 ```
 
@@ -345,3 +346,13 @@ ruff check .    # lint
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+
+## Documentation
+
+Project docs are built with **MkDocs Material** and can be deployed automatically through the `Docs` GitHub Actions workflow.
+
+```bash
+pip install -e ".[docs]"
+mkdocs serve
+```
