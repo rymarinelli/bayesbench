@@ -1,6 +1,6 @@
 <div align="center">
 
-# baysbench
+# bayesbench
 
 **Bayesian sequential benchmarking for LLMs and agents.**
 
@@ -43,11 +43,11 @@ pip install baysbench
 **Optional framework integrations:**
 
 ```bash
-pip install baysbench[openai]        # OpenAI, Groq, Together AI, Ollama, vLLM, …
-pip install baysbench[anthropic]     # Anthropic (Claude)
-pip install baysbench[huggingface]   # HuggingFace Inference API + datasets
-pip install baysbench[inspect]       # AISI Inspect eval framework
-pip install baysbench[mteb]          # MTEB embedding benchmark
+pip install bayesbench[openai]        # OpenAI, Groq, Together AI, Ollama, vLLM, …
+pip install bayesbench[anthropic]     # Anthropic (Claude)
+pip install bayesbench[huggingface]   # HuggingFace Inference API + datasets
+pip install bayesbench[inspect]       # AISI Inspect eval framework
+pip install bayesbench[mteb]          # MTEB embedding benchmark
 pip install baysbench[all]           # everything above
 ```
 
@@ -56,7 +56,7 @@ pip install baysbench[all]           # everything above
 ### Pairwise comparison
 
 ```python
-from baysbench import benchmark
+from bayesbench import benchmark
 
 @benchmark(
     model_a=lambda p: big_llm(p["question"]),
@@ -75,7 +75,7 @@ print(result.efficiency)  # e.g. 0.87 → 87% of problems saved
 ### Multi-task suite
 
 ```python
-from baysbench import BayesianBenchmark
+from bayesbench import BayesianBenchmark
 
 bench = BayesianBenchmark(confidence=0.95)
 
@@ -97,7 +97,7 @@ report.to_dataframe().to_csv("results.csv")
 ### Class-based suite
 
 ```python
-from baysbench import suite
+from bayesbench import suite
 
 @suite(confidence=0.95)
 class EvalSuite:
@@ -118,7 +118,7 @@ report = EvalSuite.run()
 ### Rank N models
 
 ```python
-from baysbench import BayesianRanker
+from bayesbench import BayesianRanker
 
 ranker = BayesianRanker(confidence=0.95)
 ranker.add_model("gpt-4o",       gpt4_fn)
@@ -141,8 +141,8 @@ print(result.summary())
 ### Continuous scores (BLEU, ROUGE, LLM-judge)
 
 ```python
-from baysbench import BayesianBenchmark
-from baysbench.posteriors import NormalPosterior
+from bayesbench import BayesianBenchmark
+from bayesbench.posteriors import NormalPosterior
 
 bench = BayesianBenchmark(
     confidence=0.95,
@@ -181,9 +181,9 @@ All adapters return a plain `callable(problem) -> str` that plugs into any baysb
 | **MTEB** | `from baysbench.adapters.mteb import st_model, mteb_sts_dataset` | SentenceTransformers, MTEB STS + Classification |
 
 ```python
-from baysbench import BayesianRanker
-from baysbench.adapters.openai_compat import openai_model
-from baysbench.adapters.anthropic_adapter import anthropic_model
+from bayesbench import BayesianRanker
+from bayesbench.adapters.openai_compat import openai_model
+from bayesbench.adapters.anthropic_adapter import anthropic_model
 
 ranker = BayesianRanker(confidence=0.95)
 ranker.add_model("gpt-4o",          openai_model("gpt-4o"))
@@ -206,7 +206,7 @@ Swap the Bayesian model to match your metric type:
 
 ```python
 # Custom prior: expect ~30% BLEU baseline
-from baysbench.posteriors import NormalPosterior
+from bayesbench.posteriors import NormalPosterior
 bench = BayesianBenchmark(posterior_factory=lambda: NormalPosterior(mu_0=0.30))
 
 # Per-task posterior override
@@ -244,13 +244,13 @@ lo, hi = result.posterior_a.credible_interval()
 
 ```bash
 # Run all tasks in a benchmark file
-baysbench my_benchmark.py
+bayesbench my_benchmark.py
 
 # Override stopping thresholds
-baysbench my_benchmark.py --confidence 0.99 --min-samples 10 --skip-threshold 0.90
+bayesbench my_benchmark.py --confidence 0.99 --min-samples 10 --skip-threshold 0.90
 
 # Print version
-baysbench --version
+bayesbench --version
 ```
 
 The benchmark file must expose a `bench = BayesianBenchmark(...)` instance or a `@suite`-decorated class.
@@ -324,7 +324,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). In short:
 
 ```bash
 git clone https://github.com/rymarinelli/baysbench
-cd baysbench
+cd bayesbench
 pip install -e ".[dev]"
 pytest          # run tests
 ruff check .    # lint
