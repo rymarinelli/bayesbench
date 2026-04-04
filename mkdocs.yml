@@ -15,4 +15,9 @@ plugins:
 
 nav:
   - Home: index.md
-  - Workflows: workflows.md
+  - Getting Started: getting-started.md
+  - Workflow Playbooks: workflows.md
+  - Examples Gallery: examples.md
+  - Concepts & Tuning: concepts.md
+  - Adapters: adapters.md
+  - API Reference: api-reference.md
