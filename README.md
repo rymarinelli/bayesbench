@@ -4,11 +4,11 @@
 
 **Bayesian sequential benchmarking for LLMs and agents.**
 
-[![CI](https://github.com/rymarinelli/baysbench/actions/workflows/ci.yml/badge.svg)](https://github.com/rymarinelli/baysbench/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/baysbench)](https://pypi.org/project/baysbench/)
+[![CI](https://github.com/rymarinelli/bayesbench/actions/workflows/ci.yml/badge.svg)](https://github.com/rymarinelli/bayesbench/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/bayesbench)](https://pypi.org/project/bayesbench/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License: SSPL-1.0](https://img.shields.io/badge/license-SSPL--1.0-orange)](LICENSE)
-[![codecov](https://codecov.io/gh/rymarinelli/baysbench/branch/main/graph/badge.svg)](https://codecov.io/gh/rymarinelli/baysbench)
+[![codecov](https://codecov.io/gh/rymarinelli/bayesbench/branch/main/graph/badge.svg)](https://codecov.io/gh/rymarinelli/bayesbench)
 
 Stop evaluating when you have enough evidence — not when you run out of problems.
 
@@ -16,7 +16,7 @@ Stop evaluating when you have enough evidence — not when you run out of proble
 
 ---
 
-baysbench applies **Bayesian sequential testing** to LLM evaluation. Instead of running every model on every problem, it stops as soon as posterior evidence crosses a statistical confidence threshold — delivering the same rigorous conclusions at a fraction of the cost.
+bayesbench applies **Bayesian sequential testing** to LLM evaluation. Instead of running every model on every problem, it stops as soon as posterior evidence crosses a statistical confidence threshold — delivering the same rigorous conclusions at a fraction of the cost.
 
 > Based on *"Bayesian Sequential Testing for Efficient LLM Benchmarking"*, submitted to the **40th International Workshop on Statistical Modelling, Oslo 2026**.  
 > Demonstrated a **98.7% cost reduction** on NorEval — 410 problems evaluated out of 31,800.
@@ -37,19 +37,19 @@ Problem 3 → update posteriors → P(A>B) = 0.96  ✓ STOP — Model A wins
 ## Installation
 
 ```bash
-pip install baysbench
+pip install bayesbench
 ```
 
 **Optional framework integrations:**
 
 ```bash
-pip install baysbench[openai]        # OpenAI, Groq, Together AI, Ollama, vLLM, …
-pip install baysbench[anthropic]     # Anthropic (Claude)
-pip install baysbench[huggingface]   # HuggingFace Inference API + datasets
-pip install baysbench[inspect]       # AISI Inspect eval framework
-pip install baysbench[mteb]          # MTEB embedding benchmark
-pip install baysbench[openclaw]      # OpenClaw agents
-pip install baysbench[all]           # everything above
+pip install bayesbench[openai]        # OpenAI, Groq, Together AI, Ollama, vLLM, …
+pip install bayesbench[anthropic]     # Anthropic (Claude)
+pip install bayesbench[huggingface]   # HuggingFace Inference API + datasets
+pip install bayesbench[inspect]       # AISI Inspect eval framework
+pip install bayesbench[mteb]          # MTEB embedding benchmark
+pip install bayesbench[openclaw]      # OpenClaw agents
+pip install bayesbench[all]           # everything above
 ```
 
 ## Quick start
@@ -171,15 +171,15 @@ result = await bench.compare_async(
 
 ## Framework adapters
 
-All adapters return a plain `callable(problem) -> str` that plugs into any baysbench API.
+All adapters return a plain `callable(problem) -> str` that plugs into any bayesbench API.
 
 | Adapter | Import | Works with |
 |---|---|---|
-| **OpenAI-compatible** | `from baysbench.adapters.openai_compat import openai_model` | OpenAI, Groq, Together AI, Fireworks, Ollama, vLLM, Azure OpenAI |
-| **Anthropic** | `from baysbench.adapters.anthropic_adapter import anthropic_model` | Claude (all versions) |
-| **HuggingFace** | `from baysbench.adapters.huggingface import hf_model, hf_dataset` | Any HF Inference API endpoint |
-| **Inspect AI** | `from baysbench.adapters.inspect_ai import inspect_model, from_inspect_dataset` | AISI Inspect `Dataset`, `Task`, `Scorer` |
-| **MTEB** | `from baysbench.adapters.mteb import st_model, mteb_sts_dataset` | SentenceTransformers, MTEB STS + Classification |
+| **OpenAI-compatible** | `from bayesbench.adapters.openai_compat import openai_model` | OpenAI, Groq, Together AI, Fireworks, Ollama, vLLM, Azure OpenAI |
+| **Anthropic** | `from bayesbench.adapters.anthropic_adapter import anthropic_model` | Claude (all versions) |
+| **HuggingFace** | `from bayesbench.adapters.huggingface import hf_model, hf_dataset` | Any HF Inference API endpoint |
+| **Inspect AI** | `from bayesbench.adapters.inspect_ai import inspect_model, from_inspect_dataset` | AISI Inspect `Dataset`, `Task`, `Scorer` |
+| **MTEB** | `from bayesbench.adapters.mteb import st_model, mteb_sts_dataset` | SentenceTransformers, MTEB STS + Classification |
 
 ```python
 from bayesbench import BayesianRanker
@@ -201,9 +201,9 @@ Swap the Bayesian model to match your metric type:
 
 | Posterior | Use when | Import |
 |---|---|---|
-| `BetaPosterior` | Binary outcomes: exact match, pass/fail, multiple choice | `from baysbench.posteriors import BetaPosterior` |
-| `NormalPosterior` | Continuous scores: BLEU, ROUGE, cosine similarity, LLM-judge (0–1) | `from baysbench.posteriors import NormalPosterior` |
-| Custom | Any distribution — subclass `Posterior` | `from baysbench.posteriors import Posterior` |
+| `BetaPosterior` | Binary outcomes: exact match, pass/fail, multiple choice | `from bayesbench.posteriors import BetaPosterior` |
+| `NormalPosterior` | Continuous scores: BLEU, ROUGE, cosine similarity, LLM-judge (0–1) | `from bayesbench.posteriors import NormalPosterior` |
+| Custom | Any distribution — subclass `Posterior` | `from bayesbench.posteriors import Posterior` |
 
 ```python
 # Custom prior: expect ~30% BLEU baseline
@@ -324,7 +324,7 @@ BayesianRanker(
 See [CONTRIBUTING.md](CONTRIBUTING.md). In short:
 
 ```bash
-git clone https://github.com/rymarinelli/baysbench
+git clone https://github.com/rymarinelli/bayesbench
 cd bayesbench
 pip install -e ".[dev]"
 pytest          # run tests
@@ -351,6 +351,9 @@ MIT — see [LICENSE](LICENSE).
 ## Documentation
 
 Project docs are built with **MkDocs Material** and can be deployed automatically through the `Docs` GitHub Actions workflow.
+
+- Start here: `docs/index.md`
+- Workflow guides (LLM + agentic benchmarking): `docs/workflows.md`
 
 ```bash
 pip install -e ".[docs]"
