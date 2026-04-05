@@ -84,6 +84,9 @@ baysbench = ["py.typed"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "docker: runs optional Docker-based integration smoke tests for adapter extras",
+]
 
 [tool.coverage.run]
 source = ["baysbench"]
