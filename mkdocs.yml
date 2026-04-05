@@ -1,6 +1,6 @@
 site_name: bayesbench
 site_description: Bayesian sequential benchmarking for LLMs and agents.
-site_url: https://rymarinelli.github.io/bayesbench/
+site_url: https://bayesbench.netlify.app/
 repo_url: https://github.com/rymarinelli/bayesbench
 
 theme:
