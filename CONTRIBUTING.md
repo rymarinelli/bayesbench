@@ -11,7 +11,7 @@ cd baysbench
 pip install -e ".[dev]"
 ```
 
-This installs baysbench in editable mode with `pytest`, `pytest-asyncio`,
+This installs bayesbench (current package import path may still be `baysbench`) in editable mode with `pytest`, `pytest-asyncio`,
 `pytest-cov`, `ruff`, and `mypy`.
 
 ## Running tests
@@ -23,7 +23,15 @@ pytest tests/test_core.py       # single file
 pytest --cov=baysbench          # with coverage
 ```
 
-All 148+ tests are mock-based and run without any API keys or external services.
+Most tests are mock-based and run without API keys or external services.
+
+Optional adapter smoke tests can run in fresh Docker containers:
+
+```bash
+BAYESBENCH_RUN_DOCKER_TESTS=1 pytest -m docker
+```
+
+These validate adapter extras (e.g. OpenAI/Anthropic/OpenClaw/Inspect) in clean environments and are skipped by default. The Inspect and OpenClaw checks exercise real third-party packages (still without external API calls).
 
 ## Linting and type checking
 
