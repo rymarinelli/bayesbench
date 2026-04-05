@@ -343,10 +343,6 @@ ruff check .    # lint
 }
 ```
 
-## License
-
-MIT — see [LICENSE](LICENSE).
-
 
 ## Documentation
 
