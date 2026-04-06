@@ -11,7 +11,7 @@ from typing import Any, Protocol, runtime_checkable
 
 @runtime_checkable
 class ModelAdapter(Protocol):
-    """Protocol for a model callable used in baysbench.
+    """Protocol for a model callable used in bayesbench.
 
     Any object that implements ``__call__(problem) -> str`` satisfies this
     protocol — plain functions, async functions, and framework-specific
@@ -30,5 +30,5 @@ def _require(package: str, extra: str) -> None:
     except ImportError as exc:
         raise ImportError(
             f"Package '{package}' is required for this adapter. "
-            f"Install it with: pip install baysbench[{extra}]"
+            f"Install it with: pip install bayesbench[{extra}]"
         ) from exc

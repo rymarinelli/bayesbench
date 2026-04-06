@@ -10,7 +10,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from baysbench import BayesianBenchmark, benchmark, suite
+from bayesbench import BayesianBenchmark, benchmark, suite
 
 # ---------------------------------------------------------------------------
 # Toy dataset: 200 arithmetic problems  {question: str, answer: str}

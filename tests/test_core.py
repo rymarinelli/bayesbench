@@ -1,8 +1,8 @@
-"""Tests for baysbench.core."""
+"""Tests for bayesbench.core."""
 
 import pytest
 
-from baysbench.core import BetaPosterior, is_non_discriminating, prob_a_beats_b
+from bayesbench.core import BetaPosterior, is_non_discriminating, prob_a_beats_b
 
 
 class TestBetaPosterior:

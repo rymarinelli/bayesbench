@@ -1,11 +1,11 @@
-"""framework_adapters.py — how to use baysbench with HuggingFace, OpenAI,
+"""framework_adapters.py — how to use bayesbench with HuggingFace, OpenAI,
 Anthropic, and any OpenAI-compatible endpoint.
 
 This file shows the *structure* — replace stub calls with real API calls.
 Real dependencies are optional extras:
-    pip install baysbench[huggingface]
-    pip install baysbench[openai]
-    pip install baysbench[anthropic]
+    pip install bayesbench[huggingface]
+    pip install bayesbench[openai]
+    pip install bayesbench[anthropic]
 
 Run with:
     python examples/framework_adapters.py
@@ -35,12 +35,12 @@ PROBLEMS = [
 def demo_huggingface():
     """Compare two HuggingFace models via the Inference API."""
     print("=== HuggingFace adapter demo ===")
-    print("(requires: pip install baysbench[huggingface])")
+    print("(requires: pip install bayesbench[huggingface])")
     print("(requires: HF_TOKEN env var)\n")
 
     try:
-        from baysbench import BayesianBenchmark
-        from baysbench.adapters.huggingface import hf_dataset, hf_model
+        from bayesbench import BayesianBenchmark
+        from bayesbench.adapters.huggingface import hf_dataset, hf_model
 
         bench = BayesianBenchmark(confidence=0.95)
 
@@ -84,12 +84,12 @@ def demo_huggingface():
 def demo_openai():
     """Compare two OpenAI models."""
     print("=== OpenAI-compatible adapter demo ===")
-    print("(requires: pip install baysbench[openai])")
+    print("(requires: pip install bayesbench[openai])")
     print("(requires: OPENAI_API_KEY env var)\n")
 
     try:
-        from baysbench import benchmark
-        from baysbench.adapters.openai_compat import openai_model
+        from bayesbench import benchmark
+        from bayesbench.adapters.openai_compat import openai_model
 
         model_a = openai_model(
             "gpt-4o",
@@ -127,11 +127,11 @@ def demo_openai():
 def demo_groq():
     """Same decorator, different base_url → Groq."""
     print("=== Groq (OpenAI-compatible) adapter demo ===")
-    print("(requires: pip install baysbench[openai])")
+    print("(requires: pip install bayesbench[openai])")
     print("(requires: GROQ_API_KEY env var)\n")
 
     try:
-        from baysbench.adapters.openai_compat import openai_model
+        from bayesbench.adapters.openai_compat import openai_model
 
         model = openai_model(
             "llama-3.1-70b-versatile",
@@ -140,7 +140,7 @@ def demo_groq():
             api_key=os.getenv("GROQ_API_KEY"),
             max_tokens=32,
         )
-        print(f"  Groq model ready: {model.__baysbench_model__}")  # type: ignore
+        print(f"  Groq model ready: {model.__bayesbench_model__}")  # type: ignore
     except ImportError as e:
         print(f"  Skipped: {e}\n")
 
@@ -148,11 +148,11 @@ def demo_groq():
 def demo_ollama():
     """Same decorator, local Ollama endpoint."""
     print("=== Ollama (local) adapter demo ===")
-    print("(requires: pip install baysbench[openai])")
+    print("(requires: pip install bayesbench[openai])")
     print("(requires: Ollama running on localhost:11434)\n")
 
     try:
-        from baysbench.adapters.openai_compat import openai_model
+        from bayesbench.adapters.openai_compat import openai_model
 
         model = openai_model(
             "llama3",
@@ -161,7 +161,7 @@ def demo_ollama():
             api_key="ollama",  # Ollama ignores the key
             max_tokens=64,
         )
-        print(f"  Ollama model ready: {model.__baysbench_model__}")  # type: ignore
+        print(f"  Ollama model ready: {model.__bayesbench_model__}")  # type: ignore
     except ImportError as e:
         print(f"  Skipped: {e}\n")
 
@@ -173,12 +173,12 @@ def demo_ollama():
 def demo_anthropic():
     """Compare two Claude models."""
     print("=== Anthropic adapter demo ===")
-    print("(requires: pip install baysbench[anthropic])")
+    print("(requires: pip install bayesbench[anthropic])")
     print("(requires: ANTHROPIC_API_KEY env var)\n")
 
     try:
-        from baysbench import BayesianRanker
-        from baysbench.adapters.anthropic_adapter import anthropic_model
+        from bayesbench import BayesianRanker
+        from bayesbench.adapters.anthropic_adapter import anthropic_model
 
         opus = anthropic_model(
             "claude-opus-4-6",
@@ -225,12 +225,12 @@ def demo_anthropic():
 async def demo_async_cross_framework():
     """Mix an async OpenAI model with an async HuggingFace model."""
     print("=== Async cross-framework demo ===")
-    print("(requires: pip install baysbench[openai,huggingface])\n")
+    print("(requires: pip install bayesbench[openai,huggingface])\n")
 
     try:
-        from baysbench import BayesianBenchmark
-        from baysbench.adapters.huggingface import hf_model_async
-        from baysbench.adapters.openai_compat import openai_model_async
+        from bayesbench import BayesianBenchmark
+        from bayesbench.adapters.huggingface import hf_model_async
+        from bayesbench.adapters.openai_compat import openai_model_async
 
         bench = BayesianBenchmark(confidence=0.95)
 

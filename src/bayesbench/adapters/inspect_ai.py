@@ -2,17 +2,17 @@
 
 Inspect (inspect_ai) is the UK AI Safety Institute's framework for LLM
 evaluation. This adapter bridges Inspect's rich dataset ecosystem and model
-infrastructure with baysbench's Bayesian sequential testing.
+infrastructure with bayesbench's Bayesian sequential testing.
 
 Install dependencies::
 
-    pip install baysbench[inspect]
+    pip install bayesbench[inspect]
 
 Usage — convert an Inspect dataset and compare two models::
 
     from inspect_ai.dataset import hf_dataset
-    from baysbench import BayesianBenchmark
-    from baysbench.adapters.inspect_ai import (
+    from bayesbench import BayesianBenchmark
+    from bayesbench.adapters.inspect_ai import (
         from_inspect_dataset,
         inspect_model,
         exact_match_score,
@@ -41,8 +41,8 @@ Usage — convert an Inspect dataset and compare two models::
 
 Usage — rank N models with BayesianRanker::
 
-    from baysbench import BayesianRanker
-    from baysbench.adapters.inspect_ai import inspect_model, includes_score
+    from bayesbench import BayesianRanker
+    from bayesbench.adapters.inspect_ai import inspect_model, includes_score
 
     ranker = BayesianRanker(confidence=0.95)
     for name in ["openai/gpt-4o", "openai/gpt-4o-mini", "anthropic/claude-haiku-4-5"]:
@@ -53,7 +53,7 @@ Usage — rank N models with BayesianRanker::
 
 Usage — async (preserves Inspect's native async model interface)::
 
-    from baysbench.adapters.inspect_ai import inspect_model_async
+    from bayesbench.adapters.inspect_ai import inspect_model_async
 
     async_a = inspect_model_async("openai/gpt-4o")
     result = await bench.compare_async(async_a, async_b, includes_score, problems)
@@ -74,7 +74,7 @@ from .base import _require
 
 
 def from_inspect_dataset(dataset: Any) -> list[dict]:
-    """Convert an Inspect ``Dataset`` to a list of baysbench problem dicts.
+    """Convert an Inspect ``Dataset`` to a list of bayesbench problem dicts.
 
     Each problem dict contains:
     - ``"input"`` — the prompt string (last user message if multi-turn)
@@ -89,12 +89,12 @@ def from_inspect_dataset(dataset: Any) -> list[dict]:
                  attributes.
 
     Returns:
-        List of problem dicts compatible with all baysbench APIs.
+        List of problem dicts compatible with all bayesbench APIs.
 
     Example::
 
         from inspect_ai.dataset import hf_dataset, FieldSpec
-        from baysbench.adapters.inspect_ai import from_inspect_dataset
+        from bayesbench.adapters.inspect_ai import from_inspect_dataset
 
         problems = from_inspect_dataset(
             hf_dataset(
@@ -160,7 +160,7 @@ def inspect_model(
 ) -> Callable[[dict], str]:
     """Create a **synchronous** model callable backed by Inspect's model layer.
 
-    Wraps ``inspect_ai.model.get_model`` so baysbench can call it like any
+    Wraps ``inspect_ai.model.get_model`` so bayesbench can call it like any
     other ``callable(problem) -> str``.  Uses ``asyncio.run()`` internally;
     do not use inside an already-running event loop (use
     :func:`inspect_model_async` instead).
@@ -204,7 +204,7 @@ def inspect_model(
         output = asyncio.run(_model.generate(messages, config=config))
         return output.completion.strip()
 
-    call.__baysbench_model__ = model_id  # type: ignore[attr-defined]
+    call.__bayesbench_model__ = model_id  # type: ignore[attr-defined]
     return call
 
 
@@ -216,8 +216,8 @@ def inspect_model_async(
 ) -> Callable[[dict], Any]:
     """Create an **async** model callable backed by Inspect's model layer.
 
-    Use this with :meth:`~baysbench.BayesianBenchmark.compare_async` or
-    :meth:`~baysbench.BayesianRanker.rank_async` to avoid creating a new
+    Use this with :meth:`~bayesbench.BayesianBenchmark.compare_async` or
+    :meth:`~bayesbench.BayesianRanker.rank_async` to avoid creating a new
     event loop per call.
 
     Args:
@@ -252,7 +252,7 @@ def inspect_model_async(
         output = await _model.generate(messages, config=config)
         return output.completion.strip()
 
-    call.__baysbench_model__ = model_id  # type: ignore[attr-defined]
+    call.__bayesbench_model__ = model_id  # type: ignore[attr-defined]
     return call
 
 

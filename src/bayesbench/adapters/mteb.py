@@ -4,25 +4,25 @@ MTEB is the standard benchmark for text embedding models covering
 Classification, Clustering, Retrieval, Reranking, STS, Summarization,
 and more across 100+ datasets and 50+ languages.
 
-This adapter lets you use baysbench's Bayesian sequential testing to compare
+This adapter lets you use bayesbench's Bayesian sequential testing to compare
 embedding models on MTEB tasks with dramatic cost reductions vs full runs.
 
 Install dependencies::
 
-    pip install baysbench[mteb]
+    pip install bayesbench[mteb]
 
 Supported task types
 --------------------
 - **STS** (Semantic Textual Similarity) — compare sentence-pair cosine
-  similarities against gold scores.  Use :class:`~baysbench.posteriors.NormalPosterior`.
+  similarities against gold scores.  Use :class:`~bayesbench.posteriors.NormalPosterior`.
 - **Classification** — embed texts, classify with k-NN, compare accuracy.
-  Use the default :class:`~baysbench.posteriors.BetaPosterior`.
+  Use the default :class:`~bayesbench.posteriors.BetaPosterior`.
 
 Usage — STS comparison::
 
-    from baysbench import BayesianBenchmark
-    from baysbench.posteriors import NormalPosterior
-    from baysbench.adapters.mteb import (
+    from bayesbench import BayesianBenchmark
+    from bayesbench.posteriors import NormalPosterior
+    from bayesbench.adapters.mteb import (
         mteb_sts_dataset,
         st_model,
         sts_score_fn,
@@ -44,8 +44,8 @@ Usage — STS comparison::
 
 Usage — Classification comparison::
 
-    from baysbench import BayesianBenchmark
-    from baysbench.adapters.mteb import mteb_classification_dataset, st_model
+    from bayesbench import BayesianBenchmark
+    from bayesbench.adapters.mteb import mteb_classification_dataset, st_model
 
     data = mteb_classification_dataset("Banking77Classification.v2")
     model_a = st_model("sentence-transformers/all-mpnet-base-v2")
@@ -69,9 +69,9 @@ Usage — Classification comparison::
 
 Usage — rank N embedding models::
 
-    from baysbench import BayesianRanker
-    from baysbench.posteriors import NormalPosterior
-    from baysbench.adapters.mteb import mteb_sts_dataset, st_model, sts_score_fn
+    from bayesbench import BayesianRanker
+    from bayesbench.posteriors import NormalPosterior
+    from bayesbench.adapters.mteb import mteb_sts_dataset, st_model, sts_score_fn
 
     ranker = BayesianRanker(confidence=0.95, posterior_factory=NormalPosterior)
     for name in [
@@ -132,7 +132,7 @@ def mteb_sts_dataset(
 
     Example::
 
-        from baysbench.adapters.mteb import mteb_sts_dataset
+        from bayesbench.adapters.mteb import mteb_sts_dataset
         problems = mteb_sts_dataset("STSBenchmark", max_samples=300)
     """
     _require("mteb", "mteb")
@@ -200,7 +200,7 @@ def mteb_classification_dataset(
 
     Example::
 
-        from baysbench.adapters.mteb import mteb_classification_dataset
+        from bayesbench.adapters.mteb import mteb_classification_dataset
         data = mteb_classification_dataset("Banking77Classification.v2")
         # data["train"] → [{text: ..., label: ...}, ...]
         # data["test"]  → [{text: ..., label: ...}, ...]
@@ -254,7 +254,7 @@ def st_model(
     embeddings for the sentence pair (``sentence1``, ``sentence2``).
 
     Pass this callable as ``model_a`` / ``model_b`` to
-    :meth:`~baysbench.BayesianBenchmark.compare` together with
+    :meth:`~bayesbench.BayesianBenchmark.compare` together with
     :func:`sts_score_fn`.
 
     Args:
@@ -272,7 +272,7 @@ def st_model(
 
     Example::
 
-        from baysbench.adapters.mteb import st_model, sts_score_fn
+        from bayesbench.adapters.mteb import st_model, sts_score_fn
 
         model = st_model("sentence-transformers/all-MiniLM-L6-v2")
         problem = {"sentence1": "A dog runs.", "sentence2": "A puppy jogs.", "gold_score": 0.8}
@@ -300,7 +300,7 @@ def st_model(
         )
         return embeddings  # shape (2, dim)
 
-    encode_sts.__baysbench_model__ = _name  # type: ignore[attr-defined]
+    encode_sts.__bayesbench_model__ = _name  # type: ignore[attr-defined]
     return encode_sts
 
 
@@ -345,7 +345,7 @@ def mteb_classification_model(
         )
         return embeddings[0]  # shape (dim,)
 
-    encode_single.__baysbench_model__ = _name  # type: ignore[attr-defined]
+    encode_single.__bayesbench_model__ = _name  # type: ignore[attr-defined]
     return encode_single
 
 
@@ -361,7 +361,7 @@ def sts_score_fn(problem: dict, embeddings: np.ndarray) -> float:
     similarity (dot product), maps to ``[0, 1]``, then returns
     ``1 - |predicted - gold|`` so *higher = better agreement*.
 
-    Use with :class:`~baysbench.posteriors.NormalPosterior` since the score
+    Use with :class:`~bayesbench.posteriors.NormalPosterior` since the score
     is continuous.
 
     Args:
@@ -429,7 +429,7 @@ def make_classification_score_fn(
 
     Example::
 
-        from baysbench.adapters.mteb import (
+        from bayesbench.adapters.mteb import (
             mteb_classification_dataset, mteb_classification_model,
             make_classification_score_fn,
         )

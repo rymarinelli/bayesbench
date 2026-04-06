@@ -1,10 +1,10 @@
 """inspect_example.py — Bayesian benchmarking with AISI's Inspect framework.
 
-Demonstrates how to use baysbench alongside inspect_ai to compare LLMs with
+Demonstrates how to use bayesbench alongside inspect_ai to compare LLMs with
 Bayesian sequential testing, cutting evaluation cost by up to 99%.
 
 Requires:
-    pip install baysbench[inspect]
+    pip install bayesbench[inspect]
     # Plus an API key for whichever models you want to test
 
 Run with:
@@ -42,8 +42,8 @@ STUB_SAMPLES = [
 # Import adapter pieces
 # ---------------------------------------------------------------------------
 
-from baysbench import BayesianBenchmark, BayesianRanker, benchmark, suite
-from baysbench.adapters.inspect_ai import (
+from bayesbench import BayesianBenchmark, BayesianRanker, benchmark, suite
+from bayesbench.adapters.inspect_ai import (
     any_target_score,
     choice_score,
     exact_match_score,
@@ -54,7 +54,7 @@ from baysbench.adapters.inspect_ai import (
     pattern_score,
 )
 
-# Convert stub samples → baysbench problem dicts
+# Convert stub samples → bayesbench problem dicts
 problems = from_inspect_dataset(STUB_SAMPLES)
 print(f"Loaded {len(problems)} problems from Inspect dataset\n")
 print("Example problem:", problems[0], "\n")
@@ -209,7 +209,7 @@ def model_correct(problem):
 def model_random(problem):
     return "A"  # always picks A
 
-from baysbench import BayesianBenchmark
+from bayesbench import BayesianBenchmark
 bench_mcq = BayesianBenchmark(confidence=0.95, min_samples=5)
 
 @bench_mcq.task(dataset=mcq_problems, name="mcq")

@@ -3,15 +3,15 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "baysbench"
-version = "0.4.0"
+name = "bayesbench"
+version = "0.4.0.dev0"
 description = "Bayesian sequential benchmarking for LLMs and agents"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "SSPL-1.0" }
 keywords = ["bayesian", "benchmarking", "llm", "statistics", "testing", "evaluation"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
     "License :: Other/Proprietary License",
@@ -30,10 +30,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/rymarinelli/baysbench"
-Repository = "https://github.com/rymarinelli/baysbench"
-"Bug Tracker" = "https://github.com/rymarinelli/baysbench/issues"
-Changelog = "https://github.com/rymarinelli/baysbench/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/rymarinelli/bayesbench"
+Repository = "https://github.com/rymarinelli/bayesbench"
+"Bug Tracker" = "https://github.com/rymarinelli/bayesbench/issues"
+Changelog = "https://github.com/rymarinelli/bayesbench/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
@@ -69,17 +69,17 @@ openclaw = [
     "openclaw>=0.1",
 ]
 all = [
-    "baysbench[huggingface,openai,anthropic,inspect,mteb,openclaw,docs]",
+    "bayesbench[huggingface,openai,anthropic,inspect,mteb,openclaw,docs]",
 ]
 
 [project.scripts]
-baysbench = "baysbench.cli:main"
+bayesbench = "bayesbench.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-baysbench = ["py.typed"]
+bayesbench = ["py.typed"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -89,7 +89,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["baysbench"]
+source = ["bayesbench"]
 branch = true
 
 [tool.coverage.report]

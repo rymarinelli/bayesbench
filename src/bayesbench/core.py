@@ -1,6 +1,6 @@
 """Core Bayesian statistical primitives — backward-compatible re-exports.
 
-The canonical implementations now live in :mod:`baysbench.posteriors`.
+The canonical implementations now live in :mod:`bayesbench.posteriors`.
 This module keeps existing imports working.
 """
 
@@ -15,7 +15,7 @@ from .posteriors.beta import BetaPosterior
 def prob_a_beats_b(posterior_a: BetaPosterior, posterior_b: BetaPosterior) -> float:
     """Compute P(accuracy_A > accuracy_B).
 
-    Thin wrapper around :meth:`~baysbench.posteriors.BetaPosterior.prob_beats`
+    Thin wrapper around :meth:`~bayesbench.posteriors.BetaPosterior.prob_beats`
     kept for backward compatibility.
     """
     return posterior_a.prob_beats(posterior_b)

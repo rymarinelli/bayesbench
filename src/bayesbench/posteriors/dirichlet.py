@@ -5,7 +5,7 @@ Use this when outcomes are drawn from a fixed set of K categories:
 - Topic or sentiment classification
 - Any K-way categorical label
 
-When K=2, this is equivalent to :class:`~baysbench.posteriors.BetaPosterior`
+When K=2, this is equivalent to :class:`~bayesbench.posteriors.BetaPosterior`
 with a symmetric prior.
 """
 
@@ -46,7 +46,7 @@ class DirichletPosterior(Posterior):
 
     Observing with a ``bool`` maps ``True`` → category 0, ``False`` → category 1,
     so ``DirichletPosterior(k=2)`` is a drop-in replacement for
-    :class:`~baysbench.posteriors.BetaPosterior` in binary benchmarks.
+    :class:`~bayesbench.posteriors.BetaPosterior` in binary benchmarks.
     """
 
     def __init__(

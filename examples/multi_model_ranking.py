@@ -16,8 +16,8 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from baysbench import BayesianRanker
-from baysbench.posteriors import NormalPosterior
+from bayesbench import BayesianRanker
+from bayesbench.posteriors import NormalPosterior
 
 random.seed(42)
 

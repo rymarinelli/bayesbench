@@ -1,17 +1,17 @@
-"""Anthropic API adapter for baysbench.
+"""Anthropic API adapter for bayesbench.
 
 Wraps the Anthropic Python SDK so Claude models plug directly into the
-baysbench decorator API.
+bayesbench decorator API.
 
 Install dependencies::
 
-    pip install baysbench[anthropic]
+    pip install bayesbench[anthropic]
 
 Usage::
 
     import os
-    from baysbench import BayesianBenchmark
-    from baysbench.adapters.anthropic_adapter import anthropic_model
+    from bayesbench import BayesianBenchmark
+    from bayesbench.adapters.anthropic_adapter import anthropic_model
 
     bench = BayesianBenchmark(confidence=0.95)
 
@@ -90,7 +90,7 @@ def anthropic_model(
         response = client.messages.create(**kwargs)
         return response.content[0].text.strip()
 
-    call.__baysbench_model__ = model  # type: ignore[attr-defined]
+    call.__bayesbench_model__ = model  # type: ignore[attr-defined]
     return call
 
 
@@ -107,7 +107,7 @@ def anthropic_model_async(
     """Async version of :func:`anthropic_model`.
 
     Returns an ``async callable(problem) -> str`` for use with
-    :meth:`~baysbench.BayesianBenchmark.compare_async`.
+    :meth:`~bayesbench.BayesianBenchmark.compare_async`.
     """
     _require("anthropic", "anthropic")
 
@@ -129,5 +129,5 @@ def anthropic_model_async(
         response = await client.messages.create(**kwargs)
         return response.content[0].text.strip()
 
-    call.__baysbench_model__ = model  # type: ignore[attr-defined]
+    call.__bayesbench_model__ = model  # type: ignore[attr-defined]
     return call

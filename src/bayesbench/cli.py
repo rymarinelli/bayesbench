@@ -1,19 +1,19 @@
-"""CLI entry point: `baysbench`.
+"""CLI entry point: `bayesbench`.
 
 Usage
 -----
 Run all tasks in a benchmark module::
 
-    baysbench my_benchmark.py
+    bayesbench my_benchmark.py
 
 The module must expose a ``bench`` variable that is a
-:class:`~baysbench.benchmark.BayesianBenchmark` instance, or a class decorated
-with :func:`~baysbench.decorators.suite` whose class variable name ends with
+:class:`~bayesbench.benchmark.BayesianBenchmark` instance, or a class decorated
+with :func:`~bayesbench.decorators.suite` whose class variable name ends with
 ``Benchmark`` or ``Suite`` (case-insensitive).
 
 Options::
 
-    baysbench my_benchmark.py --confidence 0.99 --min-samples 5
+    bayesbench my_benchmark.py --confidence 0.99 --min-samples 5
 
 """
 
@@ -28,7 +28,7 @@ from .benchmark import BayesianBenchmark
 
 
 def _load_module(path: Path):
-    spec = importlib.util.spec_from_file_location("_baysbench_module", path)
+    spec = importlib.util.spec_from_file_location("_bayesbench_module", path)
     if spec is None or spec.loader is None:
         raise ImportError(f"Cannot load module from {path}")
     mod = importlib.util.module_from_spec(spec)
@@ -52,7 +52,7 @@ def _find_bench(mod) -> BayesianBenchmark | None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="baysbench",
+        prog="bayesbench",
         description="Bayesian sequential benchmarking for LLMs and agents.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
@@ -94,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.version:
         from importlib.metadata import version
 
-        print(version("baysbench"))
+        print(version("bayesbench"))
         return 0
 
     if not args.module:

@@ -37,7 +37,7 @@ class GammaPosterior(Posterior):
 
     Usage::
 
-        from baysbench.posteriors import GammaPosterior
+        from bayesbench.posteriors import GammaPosterior
 
         # Latency benchmark: lower is better
         latency_post = GammaPosterior(higher_is_better=False)
