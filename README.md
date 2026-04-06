@@ -14,6 +14,8 @@ Stop evaluating when you have enough evidence — not when you run out of proble
 
 </div>
 
+> **⚠️ Pre-Alpha:** This package is under active development. APIs may change without notice. Not recommended for production use.
+
 ---
 
 bayesbench applies **Bayesian sequential testing** to LLM evaluation. Instead of running every model on every problem, it stops as soon as posterior evidence crosses a statistical confidence threshold — delivering the same rigorous conclusions at a fraction of the cost.
