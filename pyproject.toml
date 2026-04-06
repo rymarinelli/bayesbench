@@ -9,13 +9,12 @@ description = "Bayesian sequential benchmarking for LLMs and agents"
 authors = [{name = "Ryan Marinelli", email = "ryanma@ifi.uio.no"}]
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "SSPL-1.0" }
+license = "SSPL-1.0"
 keywords = ["bayesian", "benchmarking", "llm", "statistics", "testing", "evaluation"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
