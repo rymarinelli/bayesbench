@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=61,<65", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,7 +9,7 @@ description = "Bayesian sequential benchmarking for LLMs and agents"
 authors = [{name = "Ryan Marinelli", email = "ryanma@ifi.uio.no"}]
 readme = "README.md"
 requires-python = ">=3.10"
-license = "SSPL-1.0"
+license = { text = "SSPL-1.0" }
 keywords = ["bayesian", "benchmarking", "llm", "statistics", "testing", "evaluation"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
