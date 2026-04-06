@@ -2,7 +2,7 @@
 
 import pytest
 
-from baysbench.posteriors import DirichletPosterior, GammaPosterior, Posterior
+from bayesbench.posteriors import DirichletPosterior, GammaPosterior, Posterior
 
 # ---------------------------------------------------------------------------
 # DirichletPosterior
@@ -80,7 +80,7 @@ class TestDirichletPosterior:
         assert p.prob_beats(q) > 0.99
 
     def test_prob_beats_wrong_type_raises(self):
-        from baysbench.posteriors import BetaPosterior
+        from bayesbench.posteriors import BetaPosterior
 
         p = DirichletPosterior(k=2)
         with pytest.raises(TypeError):
@@ -141,7 +141,7 @@ class TestDirichletPosterior:
 
     def test_k2_equivalent_behavior_to_beta(self):
         """k=2 DirichletPosterior should behave like BetaPosterior(0.5, 0.5)."""
-        from baysbench.posteriors import BetaPosterior
+        from bayesbench.posteriors import BetaPosterior
 
         dp = DirichletPosterior(k=2, alpha_0=0.5)
         bp = BetaPosterior(alpha=0.5, beta=0.5)
@@ -229,7 +229,7 @@ class TestGammaPosterior:
         assert 0.3 <= a.prob_beats(b) <= 0.7
 
     def test_prob_beats_wrong_type_raises(self):
-        from baysbench.posteriors import BetaPosterior
+        from bayesbench.posteriors import BetaPosterior
 
         p = GammaPosterior()
         with pytest.raises(TypeError):
@@ -283,7 +283,7 @@ class TestGammaPosterior:
 
 
 # ---------------------------------------------------------------------------
-# Top-level convenience API: baysbench.compare and baysbench.rank
+# Top-level convenience API: bayesbench.compare and bayesbench.rank
 # ---------------------------------------------------------------------------
 
 
@@ -304,10 +304,10 @@ def score(problem, response):
 
 class TestConvenienceCompare:
     def test_compare_returns_task_result(self):
-        import baysbench
-        from baysbench.benchmark import TaskResult
+        import bayesbench
+        from bayesbench.benchmark import TaskResult
 
-        result = baysbench.compare(
+        result = bayesbench.compare(
             model_a=perfect_model,
             model_b=wrong_model,
             score_fn=score,
@@ -316,9 +316,9 @@ class TestConvenienceCompare:
         assert isinstance(result, TaskResult)
 
     def test_compare_declares_winner(self):
-        import baysbench
+        import bayesbench
 
-        result = baysbench.compare(
+        result = bayesbench.compare(
             model_a=perfect_model,
             model_b=wrong_model,
             score_fn=score,
@@ -327,9 +327,9 @@ class TestConvenienceCompare:
         assert result.winner == "model_a"
 
     def test_compare_stops_early(self):
-        import baysbench
+        import bayesbench
 
-        result = baysbench.compare(
+        result = bayesbench.compare(
             model_a=perfect_model,
             model_b=wrong_model,
             score_fn=score,
@@ -338,9 +338,9 @@ class TestConvenienceCompare:
         assert result.problems_tested < len(PROBLEMS)
 
     def test_compare_custom_confidence(self):
-        import baysbench
+        import bayesbench
 
-        result = baysbench.compare(
+        result = bayesbench.compare(
             model_a=perfect_model,
             model_b=wrong_model,
             score_fn=score,
@@ -350,9 +350,9 @@ class TestConvenienceCompare:
         assert result.winner == "model_a"
 
     def test_compare_name_propagated(self):
-        import baysbench
+        import bayesbench
 
-        result = baysbench.compare(
+        result = bayesbench.compare(
             model_a=perfect_model,
             model_b=wrong_model,
             score_fn=score,
@@ -362,9 +362,9 @@ class TestConvenienceCompare:
         assert result.name == "my_task"
 
     def test_compare_to_dict(self):
-        import baysbench
+        import bayesbench
 
-        result = baysbench.compare(
+        result = bayesbench.compare(
             model_a=perfect_model,
             model_b=wrong_model,
             score_fn=score,
@@ -379,8 +379,8 @@ class TestConvenienceCompare:
         assert "efficiency" in d
 
     def test_compare_with_normal_posterior(self):
-        import baysbench
-        from baysbench.posteriors import NormalPosterior
+        import bayesbench
+        from bayesbench.posteriors import NormalPosterior
 
         problems = [{"a": 0.8} for _ in range(100)]
 
@@ -393,7 +393,7 @@ class TestConvenienceCompare:
         def score_fn(p, r):
             return r
 
-        result = baysbench.compare(
+        result = bayesbench.compare(
             model_a=good_model,
             model_b=bad_model,
             score_fn=score_fn,
@@ -406,10 +406,10 @@ class TestConvenienceCompare:
 
 class TestConvenienceRank:
     def test_rank_returns_ranking_result(self):
-        import baysbench
-        from baysbench.ranking import RankingResult
+        import bayesbench
+        from bayesbench.ranking import RankingResult
 
-        result = baysbench.rank(
+        result = bayesbench.rank(
             models={"perfect": perfect_model, "wrong": wrong_model},
             score_fn=score,
             dataset=PROBLEMS,
@@ -417,9 +417,9 @@ class TestConvenienceRank:
         assert isinstance(result, RankingResult)
 
     def test_rank_dict_input(self):
-        import baysbench
+        import bayesbench
 
-        result = baysbench.rank(
+        result = bayesbench.rank(
             models={"perfect": perfect_model, "wrong": wrong_model},
             score_fn=score,
             dataset=PROBLEMS,
@@ -427,9 +427,9 @@ class TestConvenienceRank:
         assert result.best.name == "perfect"
 
     def test_rank_list_input(self):
-        import baysbench
+        import bayesbench
 
-        result = baysbench.rank(
+        result = bayesbench.rank(
             models=[("perfect", perfect_model), ("wrong", wrong_model)],
             score_fn=score,
             dataset=PROBLEMS,
@@ -437,9 +437,9 @@ class TestConvenienceRank:
         assert result.best.name == "perfect"
 
     def test_rank_to_dict(self):
-        import baysbench
+        import bayesbench
 
-        result = baysbench.rank(
+        result = bayesbench.rank(
             models={"perfect": perfect_model, "wrong": wrong_model},
             score_fn=score,
             dataset=PROBLEMS,
@@ -450,9 +450,9 @@ class TestConvenienceRank:
         assert "converged" in d
 
     def test_rank_model_ranking_to_dict(self):
-        import baysbench
+        import bayesbench
 
-        result = baysbench.rank(
+        result = bayesbench.rank(
             models={"perfect": perfect_model, "wrong": wrong_model},
             score_fn=score,
             dataset=PROBLEMS,
@@ -465,13 +465,13 @@ class TestConvenienceRank:
         assert "ci_hi" in row
 
     def test_rank_three_models(self):
-        import baysbench
+        import bayesbench
 
         def medium_model(problem):
             i = int(problem["q"])
             return problem["a"] if i % 2 == 0 else "WRONG"
 
-        result = baysbench.rank(
+        result = bayesbench.rank(
             models={
                 "perfect": perfect_model,
                 "medium": medium_model,
@@ -491,7 +491,7 @@ class TestConvenienceRank:
 
 class TestBenchmarkReportSerialization:
     def test_to_dict_structure(self):
-        from baysbench import BayesianBenchmark
+        from bayesbench import BayesianBenchmark
 
         bench = BayesianBenchmark(confidence=0.95, min_samples=3)
         report = bench.compare(
@@ -507,7 +507,7 @@ class TestBenchmarkReportSerialization:
         assert "efficiency" in d
 
     def test_benchmark_report_to_dict(self):
-        from baysbench import BayesianBenchmark
+        from bayesbench import BayesianBenchmark
 
         bench = BayesianBenchmark(confidence=0.95, min_samples=3)
 

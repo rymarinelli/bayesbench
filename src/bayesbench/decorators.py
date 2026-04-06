@@ -4,7 +4,7 @@ Provides framework-agnostic decorators that work with any callable —
 plain functions, async functions, HuggingFace adapters, or agent wrappers.
 
 All three styles accept a ``posterior_factory`` argument to swap in a
-different Bayesian model (e.g. :class:`~baysbench.posteriors.NormalPosterior`
+different Bayesian model (e.g. :class:`~bayesbench.posteriors.NormalPosterior`
 for continuous scores).
 
 Styles
@@ -12,8 +12,8 @@ Styles
 
 **@benchmark** — one-shot comparison with a score function::
 
-    from baysbench import benchmark
-    from baysbench.posteriors import NormalPosterior
+    from bayesbench import benchmark
+    from bayesbench.posteriors import NormalPosterior
 
     @benchmark(
         model_a=gpt4_fn,
@@ -101,9 +101,9 @@ def benchmark(
         skip_threshold: Non-discriminating skip threshold.
         min_samples: Minimum evaluations before early stopping.
         posterior_factory: Override the Bayesian model.
-                           :class:`~baysbench.posteriors.BetaPosterior` (default)
+                           :class:`~bayesbench.posteriors.BetaPosterior` (default)
                            for binary outcomes; pass
-                           :class:`~baysbench.posteriors.NormalPosterior` for
+                           :class:`~bayesbench.posteriors.NormalPosterior` for
                            continuous scores.
 
     Returns:
@@ -120,7 +120,7 @@ def benchmark(
         result = exact_match.run()
 
         # Continuous BLEU score
-        from baysbench.posteriors import NormalPosterior
+        from bayesbench.posteriors import NormalPosterior
 
         @benchmark(
             model_a=gpt4,
@@ -167,7 +167,7 @@ def benchmark(
 
         wrapper.run = run  # type: ignore[attr-defined]
         wrapper.run_async = run_async  # type: ignore[attr-defined]
-        wrapper._baysbench_config = {  # type: ignore[attr-defined]
+        wrapper._bayesbench_config = {  # type: ignore[attr-defined]
             "confidence": confidence,
             "skip_threshold": skip_threshold,
             "min_samples": min_samples,
@@ -204,7 +204,7 @@ def suite(
 
     Example::
 
-        from baysbench.posteriors import NormalPosterior
+        from bayesbench.posteriors import NormalPosterior
 
         @suite(confidence=0.95, posterior_factory=NormalPosterior)
         class QualityBenchmark:

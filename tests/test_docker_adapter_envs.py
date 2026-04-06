@@ -81,7 +81,7 @@ from unittest.mock import patch
 try:
     from bayesbench.adapters.openai_compat import openai_model
 except ImportError:
-    from baysbench.adapters.openai_compat import openai_model
+    from bayesbench.adapters.openai_compat import openai_model
 
 class _Response:
     choices = [type("Choice", (), {"message": type("Msg", (), {"content": "ok"})()})()]
@@ -108,7 +108,7 @@ from unittest.mock import patch
 try:
     from bayesbench.adapters.anthropic_adapter import anthropic_model
 except ImportError:
-    from baysbench.adapters.anthropic_adapter import anthropic_model
+    from bayesbench.adapters.anthropic_adapter import anthropic_model
 
 class _Client:
     def __init__(self, **kwargs):
@@ -133,7 +133,7 @@ assert openclaw is not None
 try:
     from bayesbench.adapters.openclaw import openclaw_agent
 except ImportError:
-    from baysbench.adapters.openclaw import openclaw_agent
+    from bayesbench.adapters.openclaw import openclaw_agent
 
 class _Agent:
     def run(self, prompt):
@@ -153,7 +153,7 @@ from inspect_ai.dataset import Sample
 try:
     from bayesbench.adapters.inspect_ai import from_inspect_dataset, exact_match_score
 except ImportError:
-    from baysbench.adapters.inspect_ai import from_inspect_dataset, exact_match_score
+    from bayesbench.adapters.inspect_ai import from_inspect_dataset, exact_match_score
 
 samples = [Sample(input="What is 2+2?", target="4", id="s1")]
 problems = from_inspect_dataset(samples)

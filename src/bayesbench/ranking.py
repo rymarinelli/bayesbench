@@ -7,7 +7,7 @@ ranked pair (rank k, rank k+1) satisfies P(k > k+1) ≥ confidence.
 
 Usage::
 
-    from baysbench import BayesianRanker
+    from bayesbench import BayesianRanker
 
     ranker = BayesianRanker(confidence=0.95, min_samples=5)
     ranker.add_model("gpt-4o",       gpt4_fn)
@@ -207,7 +207,7 @@ class BayesianRanker:
                         Set to 1.0 to disable tie detection.
         min_samples: Minimum evaluations per model before stopping.
         posterior_factory: Zero-arg callable returning a fresh
-                           :class:`~baysbench.posteriors.Posterior`.
+                           :class:`~bayesbench.posteriors.Posterior`.
 
     Example::
 

@@ -1,10 +1,10 @@
-"""Tests for baysbench.adapters.inspect_ai (mock-based — no real API calls)."""
+"""Tests for bayesbench.adapters.inspect_ai (mock-based — no real API calls)."""
 
 from __future__ import annotations
 
 import pytest
 
-from baysbench.adapters.inspect_ai import (
+from bayesbench.adapters.inspect_ai import (
     any_target_score,
     choice_score,
     exact_match_score,
@@ -225,7 +225,7 @@ class TestInspectModelMissingLibrary:
         orig = sys.modules.get("inspect_ai")
         sys.modules["inspect_ai"] = None  # type: ignore[assignment]
         try:
-            from baysbench.adapters.inspect_ai import inspect_model
+            from bayesbench.adapters.inspect_ai import inspect_model
 
             with pytest.raises((ImportError, AttributeError)):
                 model = inspect_model("openai/gpt-4o")

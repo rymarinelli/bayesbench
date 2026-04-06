@@ -1,4 +1,4 @@
-"""OpenAI-compatible API adapter for baysbench.
+"""OpenAI-compatible API adapter for bayesbench.
 
 Works with any provider that exposes an OpenAI-compatible chat completions
 endpoint: OpenAI, Azure OpenAI, Groq, Together AI, Fireworks AI,
@@ -6,13 +6,13 @@ Ollama (local), vLLM, LiteLLM, and more.
 
 Install dependencies::
 
-    pip install baysbench[openai]
+    pip install bayesbench[openai]
 
 Usage (OpenAI)::
 
     import os
-    from baysbench import BayesianBenchmark
-    from baysbench.adapters.openai_compat import openai_model
+    from bayesbench import BayesianBenchmark
+    from bayesbench.adapters.openai_compat import openai_model
 
     bench = BayesianBenchmark(confidence=0.95)
 
@@ -104,7 +104,7 @@ def openai_model(
         )
         return (response.choices[0].message.content or "").strip()
 
-    call.__baysbench_model__ = model  # type: ignore[attr-defined]
+    call.__bayesbench_model__ = model  # type: ignore[attr-defined]
     return call
 
 
@@ -145,5 +145,5 @@ def openai_model_async(
         )
         return (response.choices[0].message.content or "").strip()
 
-    call.__baysbench_model__ = model  # type: ignore[attr-defined]
+    call.__bayesbench_model__ = model  # type: ignore[attr-defined]
     return call

@@ -1,8 +1,8 @@
-"""Tests for baysbench.adapters (mock-based — no real API calls)."""
+"""Tests for bayesbench.adapters (mock-based — no real API calls)."""
 
 import pytest
 
-from baysbench.adapters.base import ModelAdapter, _require
+from bayesbench.adapters.base import ModelAdapter, _require
 
 # ---------------------------------------------------------------------------
 # ModelAdapter protocol
@@ -39,8 +39,8 @@ class TestRequireHelper:
         _require("numpy", "test")  # should not raise
 
     def test_raises_import_error_for_missing(self):
-        with pytest.raises(ImportError, match="pip install baysbench"):
-            _require("_baysbench_nonexistent_pkg_xyz", "some-extra")
+        with pytest.raises(ImportError, match="pip install bayesbench"):
+            _require("_bayesbench_nonexistent_pkg_xyz", "some-extra")
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +57,7 @@ class TestHuggingFaceAdapterMocked:
         orig = sys.modules.get("huggingface_hub")
         sys.modules["huggingface_hub"] = None  # type: ignore[assignment]
         try:
-            from baysbench.adapters.huggingface import hf_model
+            from bayesbench.adapters.huggingface import hf_model
 
             with pytest.raises((ImportError, AttributeError)):
                 model = hf_model("test/model", api_key="fake")
@@ -95,7 +95,7 @@ class TestHuggingFaceAdapterMocked:
 
         import importlib
 
-        import baysbench.adapters.huggingface as hf_mod
+        import bayesbench.adapters.huggingface as hf_mod
 
         importlib.reload(hf_mod)
 
@@ -116,7 +116,7 @@ class TestOpenAIAdapterMocked:
         orig = sys.modules.get("openai")
         sys.modules["openai"] = None  # type: ignore[assignment]
         try:
-            from baysbench.adapters.openai_compat import openai_model
+            from bayesbench.adapters.openai_compat import openai_model
 
             with pytest.raises((ImportError, AttributeError)):
                 model = openai_model("gpt-4o", api_key="fake")
@@ -157,7 +157,7 @@ class TestOpenAIAdapterMocked:
 
         import importlib
 
-        import baysbench.adapters.openai_compat as oa_mod
+        import bayesbench.adapters.openai_compat as oa_mod
 
         importlib.reload(oa_mod)
 
@@ -198,7 +198,7 @@ class TestOpenAIAdapterMocked:
 
         import importlib
 
-        import baysbench.adapters.openai_compat as oa_mod
+        import bayesbench.adapters.openai_compat as oa_mod
 
         importlib.reload(oa_mod)
 
@@ -245,7 +245,7 @@ class TestOpenAIAdapterMocked:
 
         import importlib
 
-        import baysbench.adapters.openai_compat as oa_mod
+        import bayesbench.adapters.openai_compat as oa_mod
 
         importlib.reload(oa_mod)
 
@@ -258,7 +258,7 @@ class TestOpenAIAdapterMocked:
             temperature=0.2,
             top_p=0.7,
         )
-        assert model.__baysbench_model__ == "gpt-4o-mini"
+        assert model.__bayesbench_model__ == "gpt-4o-mini"
         result = asyncio.run(model({"question": "hi"}))
         assert result == "async mocked"
         assert captured["messages"][0]["role"] == "system"
@@ -280,7 +280,7 @@ class TestAnthropicAdapterMocked:
         orig = sys.modules.get("anthropic")
         sys.modules["anthropic"] = None  # type: ignore[assignment]
         try:
-            from baysbench.adapters.anthropic_adapter import anthropic_model
+            from bayesbench.adapters.anthropic_adapter import anthropic_model
 
             with pytest.raises((ImportError, AttributeError)):
                 model = anthropic_model("claude-opus-4-6", api_key="fake")
@@ -315,7 +315,7 @@ class TestAnthropicAdapterMocked:
 
         import importlib
 
-        import baysbench.adapters.anthropic_adapter as ant_mod
+        import bayesbench.adapters.anthropic_adapter as ant_mod
 
         importlib.reload(ant_mod)
 
@@ -351,7 +351,7 @@ class TestAnthropicAdapterMocked:
 
         import importlib
 
-        import baysbench.adapters.anthropic_adapter as ant_mod
+        import bayesbench.adapters.anthropic_adapter as ant_mod
 
         importlib.reload(ant_mod)
 
@@ -364,7 +364,7 @@ class TestAnthropicAdapterMocked:
             temperature=0.3,
             top_p=0.9,
         )
-        assert model.__baysbench_model__ == "claude-haiku-test"
+        assert model.__bayesbench_model__ == "claude-haiku-test"
         result = asyncio.run(model({"question": "hello"}))
         assert result == "async anthropic"
         assert captured["messages"][0]["content"] == "hello"
@@ -404,7 +404,7 @@ class TestHuggingFaceAdapterAsyncMocked:
 
         import importlib
 
-        import baysbench.adapters.huggingface as hf_mod
+        import bayesbench.adapters.huggingface as hf_mod
 
         importlib.reload(hf_mod)
 
@@ -417,7 +417,7 @@ class TestHuggingFaceAdapterAsyncMocked:
             temperature=0.6,
             top_p=0.8,
         )
-        assert model.__baysbench_model__ == "test/model"
+        assert model.__bayesbench_model__ == "test/model"
         result = asyncio.run(model({"prompt": "Ping?"}))
         assert result == "hf async"
         assert captured["messages"][0]["role"] == "system"

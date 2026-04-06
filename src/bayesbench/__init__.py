@@ -1,4 +1,4 @@
-"""baysbench — Bayesian sequential benchmarking for LLMs and agents.
+"""bayesbench — Bayesian sequential benchmarking for LLMs and agents.
 
 Features
 --------
@@ -13,17 +13,17 @@ Features
 - **Multi-model ranking**: Rank N models simultaneously with Bayesian early
   stopping, without running O(N²) pairwise comparisons.
 - **Three decorator styles**: ``@benchmark``, ``@bench.task``, ``@suite``.
-- **Convenience functions**: ``baysbench.compare()`` and ``baysbench.rank()``
+- **Convenience functions**: ``bayesbench.compare()`` and ``bayesbench.rank()``
   for quick one-liner evaluations — no class instantiation required.
 - **Async-first**: All operations support ``async/await``.
 - **Export**: ``to_dict()`` and ``to_dataframe()`` on all result types.
 
 Quick start::
 
-    import baysbench
+    import bayesbench
 
     # ── One-liner compare ────────────────────────────────────────────────
-    result = baysbench.compare(
+    result = bayesbench.compare(
         model_a=big_llm,
         model_b=small_llm,
         score_fn=lambda p, r: r.strip() == p["answer"],
@@ -32,7 +32,7 @@ Quick start::
     print(result.winner, f"{result.efficiency:.1%} cost saved")
 
     # ── One-liner rank ───────────────────────────────────────────────────
-    result = baysbench.rank(
+    result = bayesbench.rank(
         models={"gpt-4o": gpt4_fn, "llama-3": llama_fn, "mistral": mistral_fn},
         score_fn=lambda p, r: r.strip() == p["answer"],
         dataset=problems,
@@ -40,7 +40,7 @@ Quick start::
     print(result.summary())
 
     # ── @benchmark — one-shot ────────────────────────────────────────────
-    from baysbench import benchmark
+    from bayesbench import benchmark
 
     @benchmark(model_a=big_llm, model_b=small_llm, dataset=problems)
     def exact_match(problem, response):
@@ -49,7 +49,7 @@ Quick start::
     result = exact_match.run()
 
     # ── @bench.task — multi-task ─────────────────────────────────────────
-    from baysbench import BayesianBenchmark
+    from bayesbench import BayesianBenchmark
 
     bench = BayesianBenchmark(confidence=0.95)
 
@@ -63,7 +63,7 @@ Quick start::
     df = report.to_dataframe()        # pandas DataFrame
 
     # ── @suite — class-based ─────────────────────────────────────────────
-    from baysbench import suite
+    from bayesbench import suite
 
     @suite(confidence=0.95)
     class MyEval:
@@ -73,7 +73,7 @@ Quick start::
     print(MyEval.run().summary())
 
     # ── BayesianRanker — rank N models ───────────────────────────────────
-    from baysbench import BayesianRanker
+    from bayesbench import BayesianRanker
 
     ranker = BayesianRanker(confidence=0.95)
     ranker.add_model("gpt-4o",   gpt4_fn)
@@ -85,7 +85,7 @@ Quick start::
     df = result.to_dataframe()
 
     # ── Posterior selection guide ────────────────────────────────────────
-    from baysbench.posteriors import (
+    from bayesbench.posteriors import (
         BetaPosterior,       # bool / 0-1 int outcomes
         NormalPosterior,     # float in [0,1] (BLEU, ROUGE, LLM-judge)
         DirichletPosterior,  # int category 0..K-1 (MCQ, classification)
@@ -101,9 +101,9 @@ Quick start::
     )
 
     # ── Framework adapters ───────────────────────────────────────────────
-    from baysbench.adapters.huggingface    import hf_model, hf_dataset
-    from baysbench.adapters.openai_compat  import openai_model
-    from baysbench.adapters.anthropic_adapter import anthropic_model
+    from bayesbench.adapters.huggingface    import hf_model, hf_dataset
+    from bayesbench.adapters.openai_compat  import openai_model
+    from bayesbench.adapters.anthropic_adapter import anthropic_model
 """
 
 from __future__ import annotations
@@ -117,7 +117,7 @@ from .decorators import benchmark, suite
 from .posteriors import DirichletPosterior, GammaPosterior, NormalPosterior, Posterior
 from .ranking import BayesianRanker, RankingResult
 
-__version__ = "0.4.0"
+__version__ = "0.4.0.dev0"
 
 __all__ = [
     # High-level API
@@ -188,9 +188,9 @@ def compare(
 
     Example::
 
-        import baysbench
+        import bayesbench
 
-        result = baysbench.compare(
+        result = bayesbench.compare(
             model_a=gpt4_fn,
             model_b=llama_fn,
             score_fn=lambda p, r: r.strip() == p["answer"],
@@ -248,9 +248,9 @@ def rank(
 
     Example::
 
-        import baysbench
+        import bayesbench
 
-        result = baysbench.rank(
+        result = bayesbench.rank(
             models={
                 "gpt-4o":    gpt4_fn,
                 "llama-3":   llama_fn,

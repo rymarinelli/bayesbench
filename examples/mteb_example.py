@@ -1,11 +1,11 @@
 """mteb_example.py — Bayesian benchmarking of embedding models with MTEB.
 
-Demonstrates how to use baysbench to compare sentence-transformer embedding
+Demonstrates how to use bayesbench to compare sentence-transformer embedding
 models on MTEB tasks with Bayesian sequential testing, using NormalPosterior
 for continuous STS scores and BetaPosterior for classification accuracy.
 
 Requires:
-    pip install baysbench[mteb]
+    pip install bayesbench[mteb]
 
 Run with:
     python examples/mteb_example.py
@@ -17,13 +17,13 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from baysbench import BayesianBenchmark, BayesianRanker
-from baysbench.adapters.mteb import (
+from bayesbench import BayesianBenchmark, BayesianRanker
+from bayesbench.adapters.mteb import (
     _KNNClassifier,
     make_classification_score_fn,
     sts_score_fn,
 )
-from baysbench.posteriors import NormalPosterior
+from bayesbench.posteriors import NormalPosterior
 
 # ---------------------------------------------------------------------------
 # Synthetic STS dataset (replace with mteb_sts_dataset("STSBenchmark"))
@@ -65,7 +65,7 @@ def _make_model(accuracy: float, seed: int):
         e2[1] = np.sqrt(max(0.0, 1.0 - cos ** 2))
         return np.stack([e1, e2])
 
-    encode.__baysbench_model__ = f"model_acc{accuracy:.0%}"
+    encode.__bayesbench_model__ = f"model_acc{accuracy:.0%}"
     return encode
 
 model_strong = _make_model(0.90, seed=1)   # tracks gold closely
@@ -80,7 +80,7 @@ print("=" * 60)
 print("Example 1: STS pairwise comparison")
 print("=" * 60)
 
-from baysbench import benchmark
+from bayesbench import benchmark
 
 @benchmark(
     model_a=model_strong,
@@ -109,7 +109,7 @@ print("=" * 60)
 print("Example 2: STS multi-task @suite")
 print("=" * 60)
 
-from baysbench import suite
+from bayesbench import suite
 
 @suite(confidence=0.95, posterior_factory=NormalPosterior, min_samples=10)
 class STSBenchmark:
@@ -234,14 +234,14 @@ print(cls_report.summary())
 
 
 # ===========================================================================
-# Real MTEB usage (commented out — requires pip install baysbench[mteb])
+# Real MTEB usage (commented out — requires pip install bayesbench[mteb])
 # ===========================================================================
 print()
 print("=" * 60)
 print("Real MTEB usage (uncomment to run with real models):")
 print("=" * 60)
 print("""
-from baysbench.adapters.mteb import mteb_sts_dataset, st_model
+from bayesbench.adapters.mteb import mteb_sts_dataset, st_model
 
 # STS comparison
 bench = BayesianBenchmark(confidence=0.95, posterior_factory=NormalPosterior)
@@ -252,7 +252,7 @@ result = bench.compare(model_a, model_b, sts_score_fn, problems)
 print(result)
 
 # Ranking
-from baysbench.adapters.mteb import st_model
+from bayesbench.adapters.mteb import st_model
 ranker = BayesianRanker(confidence=0.95, posterior_factory=NormalPosterior)
 for name in [
     "sentence-transformers/all-mpnet-base-v2",
@@ -264,7 +264,7 @@ result = ranker.rank(dataset=mteb_sts_dataset("STSBenchmark"), score_fn=sts_scor
 print(result.summary())
 
 # Classification
-from baysbench.adapters.mteb import (
+from bayesbench.adapters.mteb import (
     mteb_classification_dataset, mteb_classification_model, make_classification_score_fn
 )
 data = mteb_classification_dataset("Banking77Classification.v2")

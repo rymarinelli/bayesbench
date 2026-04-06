@@ -1,11 +1,11 @@
-"""Tests for baysbench.adapters.mteb (mock-based — no downloads needed)."""
+"""Tests for bayesbench.adapters.mteb (mock-based — no downloads needed)."""
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from baysbench.adapters.mteb import (
+from bayesbench.adapters.mteb import (
     _KNNClassifier,
     sts_score_fn,
 )
@@ -178,7 +178,7 @@ class TestMtebMissingLibrary:
         orig = sys.modules.get("mteb")
         sys.modules["mteb"] = None  # type: ignore[assignment]
         try:
-            from baysbench.adapters.mteb import mteb_sts_dataset
+            from bayesbench.adapters.mteb import mteb_sts_dataset
 
             with pytest.raises((ImportError, AttributeError)):
                 mteb_sts_dataset("STSBenchmark")
@@ -194,7 +194,7 @@ class TestMtebMissingLibrary:
         orig = sys.modules.get("sentence_transformers")
         sys.modules["sentence_transformers"] = None  # type: ignore[assignment]
         try:
-            from baysbench.adapters.mteb import st_model
+            from bayesbench.adapters.mteb import st_model
 
             with pytest.raises((ImportError, AttributeError)):
                 model = st_model("all-MiniLM-L6-v2")
@@ -216,8 +216,8 @@ class TestStsIntegrationWithBenchmark:
         """End-to-end: compare two fake embedding models on synthetic STS data."""
         import numpy as np
 
-        from baysbench import BayesianBenchmark
-        from baysbench.posteriors import NormalPosterior
+        from bayesbench import BayesianBenchmark
+        from bayesbench.posteriors import NormalPosterior
 
         np.random.seed(99)
         dim = 8

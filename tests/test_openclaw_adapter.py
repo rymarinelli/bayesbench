@@ -1,8 +1,8 @@
-"""Tests for baysbench.adapters.openclaw."""
+"""Tests for bayesbench.adapters.openclaw."""
 
 import pytest
 
-from baysbench.adapters.openclaw import openclaw_agent
+from bayesbench.adapters.openclaw import openclaw_agent
 
 
 class _RunAgent:

@@ -1,9 +1,9 @@
-"""Tests for baysbench.benchmark and baysbench.decorators."""
+"""Tests for bayesbench.benchmark and bayesbench.decorators."""
 
 import pytest
 
-from baysbench import BayesianBenchmark, benchmark, suite
-from baysbench.benchmark import BenchmarkReport, TaskResult
+from bayesbench import BayesianBenchmark, benchmark, suite
+from bayesbench.benchmark import BenchmarkReport, TaskResult
 
 # ---------------------------------------------------------------------------
 # Deterministic mock models

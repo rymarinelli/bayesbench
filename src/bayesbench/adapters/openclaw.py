@@ -1,15 +1,15 @@
-"""OpenClaw adapter for baysbench.
+"""OpenClaw adapter for bayesbench.
 
-This wrapper lets you benchmark OpenClaw agents with baysbench's sequential
+This wrapper lets you benchmark OpenClaw agents with bayesbench's sequential
 Bayesian evaluation loop.
 
 Install dependencies::
 
-    pip install baysbench[openclaw]
+    pip install bayesbench[openclaw]
 
 Usage::
 
-    from baysbench.adapters.openclaw import openclaw_agent
+    from bayesbench.adapters.openclaw import openclaw_agent
 
     agent_a = openclaw_agent(my_openclaw_agent)
     response = agent_a({"input": "Solve 2+2"})
@@ -63,5 +63,5 @@ def openclaw_agent(
             )
         return _extract_text(response)
 
-    call.__baysbench_model__ = getattr(agent, "name", "openclaw-agent")  # type: ignore[attr-defined]
+    call.__bayesbench_model__ = getattr(agent, "name", "openclaw-agent")  # type: ignore[attr-defined]
     return call

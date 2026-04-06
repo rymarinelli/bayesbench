@@ -189,8 +189,8 @@ class BayesianBenchmark:
     confidence threshold, dramatically reducing evaluation cost.
 
     Works with *any* posterior type via the ``posterior_factory`` parameter —
-    swap in :class:`~baysbench.posteriors.NormalPosterior` for continuous
-    scores, or supply your own :class:`~baysbench.posteriors.Posterior`
+    swap in :class:`~bayesbench.posteriors.NormalPosterior` for continuous
+    scores, or supply your own :class:`~bayesbench.posteriors.Posterior`
     subclass for custom Bayesian models.
 
     Args:
@@ -200,8 +200,8 @@ class BayesianBenchmark:
                         P(A>B) ∈ (1-skip_threshold, skip_threshold).
         min_samples: Minimum evaluations before any early stopping.
         posterior_factory: Zero-argument callable that returns a fresh
-                           :class:`~baysbench.posteriors.Posterior`.
-                           Defaults to :class:`~baysbench.posteriors.BetaPosterior`
+                           :class:`~bayesbench.posteriors.Posterior`.
+                           Defaults to :class:`~bayesbench.posteriors.BetaPosterior`
                            (binary outcomes). Pass ``NormalPosterior`` for
                            continuous score tasks.
 
@@ -211,7 +211,7 @@ class BayesianBenchmark:
         bench = BayesianBenchmark(confidence=0.95)
 
         # Continuous scores (BLEU, ROUGE, LLM-judge 0-1)
-        from baysbench.posteriors import NormalPosterior
+        from bayesbench.posteriors import NormalPosterior
         bench = BayesianBenchmark(posterior_factory=NormalPosterior)
 
         # Custom prior: expect ~30% BLEU baseline
@@ -269,8 +269,8 @@ class BayesianBenchmark:
 
         The decorated function receives one problem at a time and must return
         a tuple ``(value_a, value_b)`` where the value type matches the
-        posterior: ``bool`` for :class:`~baysbench.posteriors.BetaPosterior`,
-        ``float`` for :class:`~baysbench.posteriors.NormalPosterior`.
+        posterior: ``bool`` for :class:`~bayesbench.posteriors.BetaPosterior`,
+        ``float`` for :class:`~bayesbench.posteriors.NormalPosterior`.
 
         Args:
             name: Task name (defaults to function name).
@@ -280,7 +280,7 @@ class BayesianBenchmark:
 
         Example::
 
-            from baysbench.posteriors import NormalPosterior
+            from bayesbench.posteriors import NormalPosterior
 
             bench = BayesianBenchmark()   # default: BetaPosterior
 
@@ -301,7 +301,7 @@ class BayesianBenchmark:
                 "posterior_factory": posterior_factory,
             }
             self._tasks.append(entry)
-            fn._baysbench_task = entry  # type: ignore[attr-defined]
+            fn._bayesbench_task = entry  # type: ignore[attr-defined]
             return fn
 
         return decorator
@@ -342,7 +342,7 @@ class BayesianBenchmark:
             result = bench.compare(gpt4, gpt35, lambda p, r: r == p["a"], problems)
 
             # Continuous (BLEU)
-            from baysbench.posteriors import NormalPosterior
+            from bayesbench.posteriors import NormalPosterior
             result = bench.compare(
                 gpt4, gpt35,
                 lambda p, r: bleu(r, p["ref"]),

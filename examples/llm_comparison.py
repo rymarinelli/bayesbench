@@ -1,6 +1,6 @@
 """llm_comparison.py — async example for comparing two LLM API endpoints.
 
-Demonstrates how to use baysbench with async model callables (e.g. the
+Demonstrates how to use bayesbench with async model callables (e.g. the
 Anthropic or OpenAI Python SDKs).
 
 This file shows the *structure* — replace the stub calls with real SDK calls.
@@ -14,7 +14,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from baysbench import BayesianBenchmark
+from bayesbench import BayesianBenchmark
 
 # ---------------------------------------------------------------------------
 # Dataset (replace with a real JSONL / HuggingFace dataset loader)

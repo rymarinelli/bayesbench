@@ -37,8 +37,8 @@ non-neg count     GammaPosterior    Token count, latency (ms)
 
 Usage::
 
-    from baysbench.posteriors import BetaPosterior, NormalPosterior
-    from baysbench.posteriors import DirichletPosterior, GammaPosterior
+    from bayesbench.posteriors import BetaPosterior, NormalPosterior
+    from bayesbench.posteriors import DirichletPosterior, GammaPosterior
 
     # Binary (exact-match accuracy)
     p = BetaPosterior()

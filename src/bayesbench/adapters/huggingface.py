@@ -1,17 +1,17 @@
-"""HuggingFace adapters for baysbench.
+"""HuggingFace adapters for bayesbench.
 
 Provides thin wrappers around the HuggingFace Inference API and the
-``datasets`` library so they plug directly into the baysbench decorator API.
+``datasets`` library so they plug directly into the bayesbench decorator API.
 
 Install dependencies::
 
-    pip install baysbench[huggingface]
+    pip install bayesbench[huggingface]
 
 Usage::
 
     import os
-    from baysbench import BayesianBenchmark
-    from baysbench.adapters.huggingface import hf_model, hf_dataset
+    from bayesbench import BayesianBenchmark
+    from bayesbench.adapters.huggingface import hf_model, hf_dataset
 
     bench = BayesianBenchmark(confidence=0.95)
 
@@ -99,7 +99,7 @@ def hf_model(
         )
         return response.choices[0].message.content.strip()
 
-    call.__baysbench_model__ = model_id  # type: ignore[attr-defined]
+    call.__bayesbench_model__ = model_id  # type: ignore[attr-defined]
     return call
 
 
@@ -117,7 +117,7 @@ def hf_model_async(
     """Async version of :func:`hf_model`.
 
     Returns an ``async callable(problem) -> str`` for use with
-    :meth:`~baysbench.BayesianBenchmark.compare_async`.
+    :meth:`~bayesbench.BayesianBenchmark.compare_async`.
     """
     _require("huggingface_hub", "huggingface")
 
@@ -140,7 +140,7 @@ def hf_model_async(
         )
         return response.choices[0].message.content.strip()
 
-    call.__baysbench_model__ = model_id  # type: ignore[attr-defined]
+    call.__bayesbench_model__ = model_id  # type: ignore[attr-defined]
     return call
 
 
@@ -169,7 +169,7 @@ def hf_dataset(
 
     Example::
 
-        from baysbench.adapters.huggingface import hf_dataset
+        from bayesbench.adapters.huggingface import hf_dataset
 
         problems = hf_dataset("gsm8k", "main", split="test", max_samples=200)
         # Each element is a dict like {"question": ..., "answer": ...}

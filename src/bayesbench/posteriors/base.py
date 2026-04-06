@@ -16,8 +16,8 @@ class Posterior(ABC):
     and supports Bayesian sequential testing via ``prob_beats``.
 
     Subclass this to plug in any Bayesian model:
-    - :class:`~baysbench.posteriors.BetaPosterior` — binary correct/incorrect
-    - :class:`~baysbench.posteriors.NormalPosterior` — continuous scores
+    - :class:`~bayesbench.posteriors.BetaPosterior` — binary correct/incorrect
+    - :class:`~bayesbench.posteriors.NormalPosterior` — continuous scores
     - Your own class for custom distributions
     """
 

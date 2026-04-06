@@ -1,10 +1,10 @@
-"""Tests for baysbench.ranking."""
+"""Tests for bayesbench.ranking."""
 
 import numpy as np
 import pytest
 
-from baysbench import BayesianRanker, RankingResult
-from baysbench.posteriors import NormalPosterior
+from bayesbench import BayesianRanker, RankingResult
+from bayesbench.posteriors import NormalPosterior
 
 PROBLEMS = [{"q": str(i), "a": str(i)} for i in range(200)]
 

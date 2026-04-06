@@ -1,9 +1,9 @@
-"""Tests for baysbench.posteriors."""
+"""Tests for bayesbench.posteriors."""
 
 import numpy as np
 import pytest
 
-from baysbench.posteriors import BetaPosterior, NormalPosterior, Posterior
+from bayesbench.posteriors import BetaPosterior, NormalPosterior, Posterior
 
 # ---------------------------------------------------------------------------
 # Posterior protocol conformance
