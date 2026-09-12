@@ -111,19 +111,37 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from typing import Any
 
-from .benchmark import BayesianBenchmark, BenchmarkReport, TaskResult
+from .benchmark import BayesianBenchmark, BenchmarkReport, LiveUpdate, TaskResult
 from .core import BetaPosterior, is_non_discriminating, prob_a_beats_b
+from .decision import (
+    ConfidenceSequenceRule,
+    DecisionRule,
+    DecisionStatus,
+    PairedDifferenceRule,
+    PosteriorThresholdRule,
+    SequentialDecision,
+    StepTrace,
+)
 from .decorators import benchmark, suite
 from .posteriors import DirichletPosterior, GammaPosterior, NormalPosterior, Posterior
 from .ranking import BayesianRanker, RankingResult
 
-__version__ = "0.4.0.dev0"
+__version__ = "0.5.0b1"
 
 __all__ = [
     # High-level API
     "BayesianBenchmark",
     "BenchmarkReport",
     "TaskResult",
+    "LiveUpdate",
+    # Decision rules
+    "DecisionRule",
+    "DecisionStatus",
+    "SequentialDecision",
+    "StepTrace",
+    "PosteriorThresholdRule",
+    "ConfidenceSequenceRule",
+    "PairedDifferenceRule",
     # Decorators
     "benchmark",
     "suite",
@@ -160,9 +178,14 @@ def compare(
     *,
     name: str = "task",
     confidence: float = 0.95,
-    skip_threshold: float = 0.85,
-    min_samples: int = 3,
+    skip_threshold: float | None = None,
+    min_samples: int = 30,
     posterior_factory: Callable | None = None,
+    decision_rule: str = "posterior",
+    equivalence_margin: float | None = None,
+    max_samples: int | None = None,
+    paired: bool = False,
+    alpha: float = 0.05,
     verbose: bool = False,
 ) -> TaskResult:
     """Compare two models in one line — no class instantiation required.
@@ -178,9 +201,15 @@ def compare(
         dataset: Iterable of problems.
         name: Task name for the result.
         confidence: Stopping threshold (default 0.95).
-        skip_threshold: Non-discriminating threshold (default 0.85).
-        min_samples: Minimum evaluations before early stopping (default 3).
+        skip_threshold: Legacy P(A>B)-window skip heuristic (disabled by
+                        default). Deprecated.
+        min_samples: Minimum evaluations before early stopping (default 30).
         posterior_factory: Override the posterior (e.g. ``NormalPosterior``).
+        decision_rule: "posterior" or "confidence_sequence".
+        equivalence_margin: Optional ROPE half-width for EQUIVALENT decisions.
+        max_samples: Optional hard cap on problems evaluated.
+        paired: Model per-item score differences (paired evaluation).
+        alpha: Any-time error level for the confidence-sequence rule.
         verbose: Show a tqdm progress bar.
 
     Returns:
@@ -204,6 +233,11 @@ def compare(
         skip_threshold=skip_threshold,
         min_samples=min_samples,
         posterior_factory=posterior_factory,
+        decision_rule=decision_rule,
+        equivalence_margin=equivalence_margin,
+        max_samples=max_samples,
+        paired=paired,
+        alpha=alpha,
     )
     return bench.compare(
         model_a,
@@ -224,6 +258,7 @@ def rank(
     skip_threshold: float = 0.85,
     min_samples: int = 5,
     posterior_factory: Callable | None = None,
+    lower_is_better: bool = False,
     verbose: bool = False,
 ) -> RankingResult:
     """Rank multiple models in one line — no class instantiation required.
@@ -241,6 +276,7 @@ def rank(
         skip_threshold: Non-discriminating threshold (default 0.85).
         min_samples: Minimum evaluations before early stopping (default 5).
         posterior_factory: Override the posterior.
+        lower_is_better: Sort ascending (latency, error, cost metrics).
         verbose: Show a tqdm progress bar.
 
     Returns:
@@ -267,6 +303,7 @@ def rank(
         skip_threshold=skip_threshold,
         min_samples=min_samples,
         posterior_factory=posterior_factory,
+        lower_is_better=lower_is_better,
     )
     model_list = list(models.items()) if isinstance(models, dict) else list(models)
     for model_name, fn in model_list:

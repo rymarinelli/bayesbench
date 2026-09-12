@@ -1,0 +1,19 @@
+{
+  "name": "streamed",
+  "problems_tested": 32,
+  "total_problems": 2000,
+  "efficiency": 0.984,
+  "p_a_beats_b": 0.9999996393697174,
+  "confidence": 0.95,
+  "winner": "model_a",
+  "decision": "winner_a",
+  "paired": false,
+  "terminal_reason": "CS_lo(A)=0.7989 > CS_hi(B)=0.7884",
+  "skipped": false,
+  "mean_a": 0.5,
+  "mean_b": 0.5,
+  "ci_a_lo": 0.0015413331334360146,
+  "ci_a_hi": 0.9984586668665639,
+  "ci_b_lo": 0.0015413331334360146,
+  "ci_b_hi": 0.9984586668665639
+}

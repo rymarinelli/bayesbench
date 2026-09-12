@@ -83,8 +83,8 @@ def benchmark(
     dataset: Iterable[Any],
     name: str | None = None,
     confidence: float = 0.95,
-    skip_threshold: float = 0.85,
-    min_samples: int = 3,
+    skip_threshold: float | None = None,
+    min_samples: int = 30,
     posterior_factory: Callable[[], Posterior] | type[Posterior] | None = None,
 ) -> Callable:
     """Decorate a scoring function to create a runnable benchmark task.
@@ -180,8 +180,8 @@ def benchmark(
 
 def suite(
     confidence: float = 0.95,
-    skip_threshold: float = 0.85,
-    min_samples: int = 3,
+    skip_threshold: float | None = None,
+    min_samples: int = 30,
     posterior_factory: Callable[[], Posterior] | type[Posterior] | None = None,
 ) -> Callable:
     """Class decorator that turns a class into a multi-task benchmark suite.

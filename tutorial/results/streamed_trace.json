@@ -1,0 +1,226 @@
+[
+  {
+    "step": 1,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 2,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 3,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 4,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 5,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 6,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 7,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 8,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 9,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 10,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 11,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 12,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 13,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 14,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 15,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 16,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 17,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 18,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 19,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 20,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 21,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 22,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 23,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 24,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 25,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 26,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 27,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 28,
+    "score_a": true,
+    "score_b": true,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 29,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.5,
+    "status": "inconclusive"
+  },
+  {
+    "step": 30,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.9999974043891028,
+    "status": "inconclusive"
+  },
+  {
+    "step": 31,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.9999990281091662,
+    "status": "inconclusive"
+  },
+  {
+    "step": 32,
+    "score_a": true,
+    "score_b": false,
+    "p_a_beats_b": 0.9999996393697174,
+    "status": "winner_a"
+  }
+]

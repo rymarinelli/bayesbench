@@ -98,7 +98,12 @@ class GammaPosterior(Posterior):
         """Posterior mean rate E[λ] = α / β."""
         return self._alpha / self._beta
 
-    def prob_beats(self, other: Posterior, n_samples: int = 10_000) -> float:
+    def prob_beats(
+        self,
+        other: Posterior,
+        n_samples: int = 10_000,
+        rng: np.random.Generator | int | None = None,
+    ) -> float:
         """Probability that this model's rate is "better" than ``other``.
 
         If ``higher_is_better`` is ``True``: returns P(λ_self > λ_other).
@@ -107,10 +112,13 @@ class GammaPosterior(Posterior):
         Args:
             other: Another :class:`GammaPosterior`.
             n_samples: Number of Monte Carlo samples.
+            rng: Seed or Generator for reproducible sampling (default: a
+                 fixed seed, so decisions are deterministic).
         """
         if not isinstance(other, GammaPosterior):
             raise TypeError("GammaPosterior.prob_beats requires another GammaPosterior")
-        rng = np.random.default_rng(42)
+        if rng is None or isinstance(rng, int):
+            rng = np.random.default_rng(42 if rng is None else rng)
         samples_a = rng.gamma(self._alpha, 1.0 / self._beta, size=n_samples)
         samples_b = rng.gamma(other._alpha, 1.0 / other._beta, size=n_samples)
         if self.higher_is_better:

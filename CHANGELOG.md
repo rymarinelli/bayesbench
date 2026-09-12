@@ -6,6 +6,34 @@ Version numbers follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.5.0b1] — 2026-08-16
+
+### Added
+- **Decision rules** (`bayesbench.decision`)
+  - `DecisionStatus`: explicit `winner_a` / `winner_b` / `equivalent` / `inconclusive` on every `TaskResult`
+  - `PosteriorThresholdRule`: confidence threshold + optional ROPE `equivalence_margin`; equivalence is now a positive claim about a margin, never "P(A>B) near 0.5"
+  - `ConfidenceSequenceRule`: Ville-valid any-time stopping (mixture likelihood ratios, Waudby-Smith & Ramdas 2023) — P(wrong winner at any stopping time) ≤ `alpha` by construction, binary outcomes
+  - `PairedDifferenceRule`: per-item score differences for paired evaluation (`paired=True`)
+- **Calibration harness** (`bayesbench.calibration`)
+  - exact enumeration, Monte Carlo sims with shared item difficulty (`item_sd`), effect-size sweeps, order-sensitivity tests, confidence-sequence simulation
+- **Traceable online execution**
+  - `TaskResult.trace`: per-step `StepTrace` (scores, P(A>B), status, terminal reason)
+  - `BayesianBenchmark(on_step=...)` callback and `iter_compare()` streaming generator with lazy model invocations — reported sample counts equal actual calls
+  - Seeded Monte Carlo (`rng`) on Normal/Gamma/Dirichlet `prob_beats`; Beta P(A>B) is now deterministic exact Gauss–Legendre quadrature (~280× faster)
+- **Ranking**: `lower_is_better` direction support (latency/cost metrics)
+- **`max_samples`** budget cap on `BayesianBenchmark`
+- **Tutorial** (`tutorial/`): executed 6-section notebook, exercises + solutions, Marp slides, synthetic CPU-only example
+
+### Changed
+- **Safe defaults**: `min_samples` 3 → 30; legacy P(A>B)-window skip heuristic disabled by default (`skip_threshold=None`); `skipped` is a deprecated alias for `equivalent`
+- `winner` keeps the legacy threshold fallback for exhausted runs; new code should read `decision`
+
+### Fixed
+- Ranking now honours skip thresholds and reports P(better) in the configured direction
+- Binary paired ROPE measured around the 0.5 discordant center
+
+---
+
 ## [0.4.0] — 2026-04-02
 
 ### Added

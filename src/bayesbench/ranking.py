@@ -208,6 +208,9 @@ class BayesianRanker:
         min_samples: Minimum evaluations per model before stopping.
         posterior_factory: Zero-arg callable returning a fresh
                            :class:`~bayesbench.posteriors.Posterior`.
+        lower_is_better: When True, sort ascending (latency, error rate,
+                         cost metrics) and report P(better) against the
+                         lower-is-better direction.
 
     Example::
 
@@ -223,6 +226,7 @@ class BayesianRanker:
         skip_threshold: float = 0.85,
         min_samples: int = 5,
         posterior_factory: Callable[[], Posterior] | type[Posterior] | None = None,
+        lower_is_better: bool = False,
     ) -> None:
         if not (0.5 < confidence <= 1.0):
             raise ValueError("confidence must be in (0.5, 1.0]")
@@ -231,6 +235,7 @@ class BayesianRanker:
         self.confidence = confidence
         self.skip_threshold = skip_threshold
         self.min_samples = min_samples
+        self.lower_is_better = lower_is_better
         self._posterior_factory: Callable[[], Posterior] = (
             posterior_factory if posterior_factory is not None else BetaPosterior
         )
@@ -394,14 +399,28 @@ class BayesianRanker:
     # ------------------------------------------------------------------
 
     def _sorted_names(self, posteriors: dict[str, Posterior]) -> list[str]:
-        """Return model names sorted by descending posterior mean."""
-        return sorted(posteriors, key=lambda n: posteriors[n].mean, reverse=True)
+        """Return model names sorted best-first.
+
+        Descending posterior mean when higher is better, ascending when
+        ``lower_is_better=True`` (latency, error rates, cost).
+        """
+        return sorted(
+            posteriors,
+            key=lambda n: posteriors[n].mean,
+            reverse=not self.lower_is_better,
+        )
+
+    def _prob_beats_next(self, posteriors: dict[str, Posterior], better: str, worse: str) -> float:
+        """P(the better-ranked model actually beats the worse-ranked one)."""
+        if self.lower_is_better:
+            return posteriors[worse].prob_beats(posteriors[better])
+        return posteriors[better].prob_beats(posteriors[worse])
 
     def _ranking_converged(self, posteriors: dict[str, Posterior]) -> bool:
         """Return True when all consecutive ranked pairs are decided or tied."""
         names = self._sorted_names(posteriors)
         for k in range(len(names) - 1):
-            p = posteriors[names[k]].prob_beats(posteriors[names[k + 1]])
+            p = self._prob_beats_next(posteriors, names[k], names[k + 1])
             tied = self.skip_threshold < 1.0 and (
                 (1.0 - self.skip_threshold) < p < self.skip_threshold
             )
@@ -416,7 +435,7 @@ class BayesianRanker:
             p_next = None
             next_name = ""
             if k + 1 < len(names):
-                p_next = posteriors[name].prob_beats(posteriors[names[k + 1]])
+                p_next = self._prob_beats_next(posteriors, name, names[k + 1])
                 next_name = names[k + 1]
             mr = ModelRanking(
                 rank=k + 1,

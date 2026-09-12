@@ -77,6 +77,74 @@ class TestRegistration:
 
 
 # ---------------------------------------------------------------------------
+# Lower-is-better ranking
+# ---------------------------------------------------------------------------
+
+
+def latency_score(problem, response):
+    # Lower latency is better; models are constant but noisy.
+    return response
+
+
+def fast_model(problem):
+    return 0.2
+
+
+def slow_model(problem):
+    return 0.9
+
+
+def mid_model(problem):
+    return 0.5
+
+
+class TestLowerIsBetter:
+    def test_lower_is_better_sorts_ascending(self):
+        ranker = BayesianRanker(
+            confidence=0.95,
+            min_samples=5,
+            lower_is_better=True,
+            posterior_factory=NormalPosterior,
+        )
+        ranker.add_model("fast", fast_model)
+        ranker.add_model("slow", slow_model)
+        ranker.add_model("mid", mid_model)
+        result = ranker.rank(
+            PROBLEMS,
+            score_fn=latency_score,
+        )
+        names = [r.name for r in result.rankings]
+        assert names == ["fast", "mid", "slow"]
+
+    def test_higher_is_better_default_unchanged(self):
+        ranker = BayesianRanker(
+            confidence=0.95,
+            min_samples=5,
+            posterior_factory=NormalPosterior,
+        )
+        ranker.add_model("fast", fast_model)
+        ranker.add_model("slow", slow_model)
+        result = ranker.rank(PROBLEMS, score_fn=latency_score)
+        names = [r.name for r in result.rankings]
+        assert names == ["slow", "fast"]
+
+    def test_p_beats_next_direction(self):
+        ranker = BayesianRanker(
+            confidence=0.95,
+            min_samples=5,
+            lower_is_better=True,
+            posterior_factory=NormalPosterior,
+        )
+        ranker.add_model("fast", fast_model)
+        ranker.add_model("slow", slow_model)
+        result = ranker.rank(PROBLEMS, score_fn=latency_score)
+        top = result.rankings[0]
+        # P(fast beats slow) in the lower-is-better direction must be ~1.
+        assert top.p_beats_next > 0.99
+        assert top.name == "fast"
+
+
+# ---------------------------------------------------------------------------
 # Ranking correctness
 # ---------------------------------------------------------------------------
 

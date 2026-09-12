@@ -96,19 +96,27 @@ class DirichletPosterior(Posterior):
         a = self.alpha
         return float(a[self._target_class] / a.sum())
 
-    def prob_beats(self, other: Posterior, n_samples: int = 10_000) -> float:
+    def prob_beats(
+        self,
+        other: Posterior,
+        n_samples: int = 10_000,
+        rng: np.random.Generator | int | None = None,
+    ) -> float:
         """P(target-class proportion A > target-class proportion B) via Monte Carlo.
 
         Args:
             other: Another :class:`DirichletPosterior` (must have same ``k``).
             n_samples: Number of MC samples.
+            rng: Seed or Generator for reproducible sampling (default: a
+                 fixed seed, so decisions are deterministic).
 
         Returns:
             Probability in [0, 1].
         """
         if not isinstance(other, DirichletPosterior):
             raise TypeError("DirichletPosterior.prob_beats requires another DirichletPosterior")
-        rng = np.random.default_rng(42)
+        if rng is None or isinstance(rng, int):
+            rng = np.random.default_rng(42 if rng is None else rng)
         samples_a = rng.dirichlet(self.alpha, size=n_samples)[:, self._target_class]
         samples_b = rng.dirichlet(other.alpha, size=n_samples)[:, other._target_class]
         return float((samples_a > samples_b).mean())

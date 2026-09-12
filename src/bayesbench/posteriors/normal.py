@@ -111,28 +111,53 @@ class NormalPosterior(Posterior):
         tail = (1 - ci) / 2
         return float(dist.ppf(tail)), float(dist.ppf(1 - tail))
 
-    def sample(self, n: int = 10_000) -> np.ndarray:
-        """Draw ``n`` samples of mu from the marginal posterior (Student-t)."""
+    def sample(self, n: int = 10_000, rng: np.random.Generator | None = None) -> np.ndarray:
+        """Draw ``n`` samples of mu from the marginal posterior (Student-t).
+
+        Args:
+            n: Number of samples.
+            rng: Optional Generator for reproducible draws.
+        """
         df = 2.0 * self.alpha_n
         scale = float(np.sqrt(self.beta_n / (self.alpha_n * self.kappa_n)))
-        return stats.t.rvs(df=df, loc=self.mu_n, scale=scale, size=n)
+        if rng is None:
+            return stats.t.rvs(df=df, loc=self.mu_n, scale=scale, size=n)
+        return stats.t.rvs(df=df, loc=self.mu_n, scale=scale, size=n, random_state=rng)
 
-    def prob_beats(self, other: Posterior, n_samples: int = 10_000) -> float:
+    def prob_beats(
+        self,
+        other: Posterior,
+        n_samples: int = 10_000,
+        rng: np.random.Generator | int | None = None,
+    ) -> float:
         """Estimate P(self mean score > other mean score) via Monte Carlo.
 
         Args:
             other: Another :class:`NormalPosterior`.
             n_samples: Monte Carlo samples (default 10,000).
+            rng: Seed or Generator for reproducible sampling (default: a
+                 fixed seed, so decisions are deterministic).
 
         Returns:
             Probability in [0, 1].
         """
         if not isinstance(other, NormalPosterior):
             raise TypeError("NormalPosterior.prob_beats expects another NormalPosterior")
+        if rng is None or isinstance(rng, int):
+            rng = np.random.default_rng(42 if rng is None else rng)
 
-        samples_self = self.sample(n_samples)
-        samples_other = other.sample(n_samples)
+        samples_self = self.sample(n_samples, rng)
+        samples_other = other.sample(n_samples, rng)
         return float(np.mean(samples_self > samples_other))
+
+    def prob_beats_value(self, value: float, n_samples: int = 10_000) -> float:  # noqa: ARG002
+        """Compute P(self mean score > ``value``) exactly via the Student-t CDF.
+
+        ``n_samples`` is accepted for API compatibility and ignored.
+        """
+        df = 2.0 * self.alpha_n
+        scale = float(np.sqrt(self.beta_n / (self.alpha_n * self.kappa_n)))
+        return float(1.0 - stats.t.cdf(value, df=df, loc=self.mu_n, scale=scale))
 
     def __repr__(self) -> str:
         lo, hi = self.credible_interval()

@@ -4,6 +4,8 @@ import pytest
 
 from bayesbench import BayesianBenchmark, benchmark, suite
 from bayesbench.benchmark import BenchmarkReport, TaskResult
+from bayesbench.decision import DecisionStatus
+from bayesbench.posteriors import NormalPosterior
 
 # ---------------------------------------------------------------------------
 # Deterministic mock models
@@ -105,6 +107,185 @@ class TestBayesianBenchmarkCompare:
         assert result.p_a_beats_b < result.confidence
         assert result.winner is None
         assert result.to_dict()["confidence"] == 0.9999
+
+
+# ---------------------------------------------------------------------------
+# Decision statuses, safe defaults, paired mode, max_samples, CS rule
+# ---------------------------------------------------------------------------
+
+
+class TestDecisionSemantics:
+    def test_decision_status_winner(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=3)
+        result = bench.compare(perfect_model, random_model, score, PROBLEMS)
+        assert result.decision is DecisionStatus.WINNER_A
+        assert result.winner == "model_a"
+
+    def test_decision_status_inconclusive_on_exhaustion(self):
+        bench = BayesianBenchmark(confidence=0.9999, min_samples=3)
+        result = bench.compare(perfect_model, perfect_model, score, PROBLEMS[:20])
+        assert result.decision is DecisionStatus.INCONCLUSIVE
+        assert result.problems_tested == 20
+
+    def test_legacy_skip_reports_equivalent(self):
+        bench = BayesianBenchmark(confidence=0.95, skip_threshold=0.85, min_samples=3)
+        result = bench.compare(perfect_model, perfect_model, score, PROBLEMS)
+        assert result.decision is DecisionStatus.EQUIVALENT
+        assert result.skipped is True  # deprecated alias
+        assert result.winner is None
+
+    def test_rope_equivalence_via_benchmark(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=10, equivalence_margin=0.05)
+        result = bench.compare(perfect_model, perfect_model, score, PROBLEMS)
+        assert result.decision is DecisionStatus.EQUIVALENT
+
+    def test_rope_not_declared_for_real_gap(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=10, equivalence_margin=0.01)
+        result = bench.compare(perfect_model, random_model, score, PROBLEMS)
+        assert result.decision is DecisionStatus.WINNER_A
+
+    def test_max_samples_caps_run(self):
+        bench = BayesianBenchmark(confidence=0.9999, min_samples=3, max_samples=7)
+        result = bench.compare(perfect_model, perfect_model, score, PROBLEMS)
+        assert result.problems_tested == 7
+        assert result.decision is DecisionStatus.INCONCLUSIVE
+
+    def test_to_dict_includes_decision(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=3)
+        result = bench.compare(perfect_model, random_model, score, PROBLEMS)
+        d = result.to_dict()
+        assert d["decision"] == "winner_a"
+        assert d["terminal_reason"] == ""
+        assert d["paired"] is False
+
+
+class TestTraces:
+    def test_trace_length_matches_problems_tested(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=3)
+        result = bench.compare(perfect_model, random_model, score, PROBLEMS)
+        assert len(result.trace) == result.problems_tested
+        assert result.problems_tested < len(PROBLEMS)
+
+    def test_trace_records_scores_and_evidence(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=3)
+        result = bench.compare(perfect_model, random_model, score, PROBLEMS)
+        first = result.trace[0]
+        assert first.step == 1
+        assert first.score_a is True and first.score_b is False
+        last = result.trace[-1]
+        assert last.is_terminal is True
+        assert last.status is DecisionStatus.WINNER_A
+
+    def test_trace_terminates_with_decision_status(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=3)
+        result = bench.compare(perfect_model, random_model, score, PROBLEMS)
+        terminal = [t for t in result.trace if t.is_terminal]
+        assert len(terminal) == 1
+        assert terminal[0].step == result.problems_tested
+
+    def test_on_step_callback_fires_per_problem(self):
+        seen = []
+        bench = BayesianBenchmark(
+            confidence=0.95, min_samples=3, on_step=lambda t: seen.append(t.step)
+        )
+        result = bench.compare(perfect_model, random_model, score, PROBLEMS)
+        assert seen == list(range(1, result.problems_tested + 1))
+
+    def test_iter_compare_streams_updates(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=3)
+        updates = list(bench.iter_compare(perfect_model, random_model, score, PROBLEMS))
+        assert updates[-1].result is not None
+        assert updates[-1].result.decision is DecisionStatus.WINNER_A
+        assert all(u.result is None for u in updates[:-1])
+        assert len(updates) == updates[-1].result.problems_tested
+
+    def test_iter_compare_lazy_invocations(self):
+        calls = {"a": 0, "b": 0}
+
+        def model_a(p):
+            calls["a"] += 1
+            return p["a"]
+
+        def model_b(p):
+            calls["b"] += 1
+            return "WRONG"
+
+        bench = BayesianBenchmark(confidence=0.95, min_samples=3)
+        updates = list(bench.iter_compare(model_a, model_b, score, PROBLEMS))
+        result = updates[-1].result
+        assert result is not None
+        assert calls["a"] == result.problems_tested
+        assert calls["b"] == result.problems_tested
+
+    def test_trace_present_for_exhausted_runs(self):
+        bench = BayesianBenchmark(confidence=0.9999, min_samples=3)
+        result = bench.compare(perfect_model, perfect_model, score, PROBLEMS[:15])
+        assert len(result.trace) == 15
+        assert result.trace[-1].status is DecisionStatus.INCONCLUSIVE
+
+
+class TestConfidenceSequenceBenchmark:
+    def test_cs_rule_end_to_end(self):
+        bench = BayesianBenchmark(decision_rule="confidence_sequence", alpha=0.05)
+        result = bench.compare(perfect_model, random_model, score, PROBLEMS)
+        assert result.decision is DecisionStatus.WINNER_A
+        assert result.winner == "model_a"
+        assert result.problems_tested < len(PROBLEMS)
+
+    def test_cs_rule_rejects_continuous(self):
+        from bayesbench.posteriors import NormalPosterior
+
+        bench = BayesianBenchmark(
+            decision_rule="confidence_sequence", posterior_factory=NormalPosterior
+        )
+
+        def score_float(problem, response):
+            return 0.5
+
+        with pytest.raises(TypeError):
+            bench.compare(perfect_model, random_model, score_float, PROBLEMS[:5])
+
+    def test_invalid_decision_rule_raises(self):
+        with pytest.raises(ValueError):
+            BayesianBenchmark(decision_rule="nope")
+
+    def test_cs_rule_exhausted_dataset_reports_inconclusive(self):
+        """Equal models never separate under the CS rule; the exhausted path
+        must build a result without touching missing posteriors."""
+        bench = BayesianBenchmark(decision_rule="confidence_sequence", alpha=0.05)
+        result = bench.compare(perfect_model, perfect_model, score, PROBLEMS[:20])
+        assert result.decision is DecisionStatus.INCONCLUSIVE
+        assert result.problems_tested == 20
+        assert result.posterior_a.n == 20.0
+        assert 0.0 <= result.p_a_beats_b <= 1.0
+
+
+class TestPairedBenchmark:
+    def test_paired_binary(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=3, paired=True)
+        result = bench.compare(perfect_model, random_model, score, PROBLEMS)
+        assert result.paired is True
+        assert result.decision is DecisionStatus.WINNER_A
+        assert result.problems_tested < len(PROBLEMS)
+
+    def test_paired_continuous(self):
+        def score_diff(problem, response):
+            return 0.9 if response == problem["a"] else 0.1
+
+        bench = BayesianBenchmark(
+            confidence=0.95,
+            min_samples=5,
+            paired=True,
+            posterior_factory=NormalPosterior,
+        )
+        result = bench.compare(perfect_model, random_model, score_diff, PROBLEMS)
+        assert result.paired is True
+        assert result.decision is DecisionStatus.WINNER_A
+
+    def test_paired_ties_stay_inconclusive(self):
+        bench = BayesianBenchmark(confidence=0.95, min_samples=3, paired=True, max_samples=50)
+        result = bench.compare(perfect_model, perfect_model, score, PROBLEMS)
+        assert result.decision is DecisionStatus.INCONCLUSIVE
 
 
 # ---------------------------------------------------------------------------

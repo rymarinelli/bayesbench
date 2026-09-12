@@ -263,9 +263,15 @@ The benchmark file must expose a `bench = BayesianBenchmark(...)` instance or a 
 ```python
 BayesianBenchmark(
     confidence: float = 0.95,           # P(A>B) threshold to declare winner
-    skip_threshold: float = 0.85,       # skip non-discriminating tasks
-    min_samples: int = 3,               # minimum evaluations before stopping
+    skip_threshold: float | None = None,  # deprecated legacy skip heuristic
+    min_samples: int = 30,              # minimum evaluations before stopping
     posterior_factory: Callable = BetaPosterior,
+    decision_rule: str = "posterior",   # or "confidence_sequence"
+    equivalence_margin: float | None = None,  # ROPE for `equivalent`
+    max_samples: int | None = None,     # hard budget cap
+    paired: bool = False,               # per-item score differences
+    alpha: float = 0.05,                # any-time error level (CS rule)
+    on_step: Callable[[StepTrace], None] | None = None,
 )
 ```
 
@@ -274,6 +280,7 @@ BayesianBenchmark(
 | `.task(name, dataset, posterior_factory)` | decorator | Register an evaluation function |
 | `.compare(model_a, model_b, score_fn, dataset)` | `TaskResult` | Direct pairwise comparison |
 | `.compare_async(...)` | `TaskResult` | Async pairwise comparison |
+| `.iter_compare(...)` | `Iterable[LiveUpdate]` | Streaming generator (lazy model calls; last update carries the result) |
 | `.run(verbose=False)` | `BenchmarkReport` | Run all registered tasks |
 | `.run_async()` | `BenchmarkReport` | Async version |
 
@@ -285,6 +292,7 @@ BayesianRanker(
     skip_threshold: float = 0.85,
     min_samples: int = 5,
     posterior_factory: Callable = BetaPosterior,
+    lower_is_better: bool = False,      # latency / cost metrics
 )
 ```
 
@@ -299,14 +307,17 @@ BayesianRanker(
 
 | Attribute | Type | Description |
 |---|---|---|
-| `.winner` | `str \| None` | `"model_a"`, `"model_b"`, or `None` |
-| `.efficiency` | `float` | Fraction of problems not evaluated |
+| `.decision` | `DecisionStatus` | `winner_a` / `winner_b` / `equivalent` / `inconclusive` |
+| `.winner` | `str \| None` | `"model_a"`, `"model_b"`, or `None` (legacy view) |
+| `.efficiency` | `float` | Fraction of problems not evaluated (actual calls) |
 | `.problems_tested` | `int` | Problems evaluated before stopping |
 | `.total_problems` | `int` | Dataset size |
 | `.p_a_beats_b` | `float` | Final P(A > B) |
 | `.confidence` | `float` | Confidence threshold used to declare a winner |
+| `.terminal_reason` | `str` | Human-readable stopping reason |
+| `.trace` | `list[StepTrace]` | Full per-step decision trail |
 | `.posterior_a`, `.posterior_b` | `Posterior` | Final posteriors |
-| `.skipped` | `bool` | True if task was non-discriminating |
+| `.skipped` | `bool` | Deprecated alias for `decision == equivalent` |
 | `.to_dict()` | `dict` | Serialise to plain dict |
 
 ### `BenchmarkReport`
